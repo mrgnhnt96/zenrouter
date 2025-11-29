@@ -151,6 +151,9 @@ abstract mixin class RouteTarget extends Object {
   int get hashCode =>
       runtimeType.hashCode ^ _path.hashCode ^ _onResult.hashCode;
 
+  @override
+  String toString() => '$runtimeType';
+
   /// Converts this route to a [Uri] for deep linking and web navigation.
   ///
   /// Override this method to support deep linking to this route.
