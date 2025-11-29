@@ -13,15 +13,6 @@ ZenRouter bridges the gap between imperative navigation (Navigator 1.0) and decl
 🔗 **Deep Linking Ready** - Built-in URI parsing and web navigation support  
 📦 **Minimal Boilerplate** - Clean mixin-based architecture  
 
-## Installation
-
-Add zenrouter to your `pubspec.yaml`:
-
-```yaml
-dependencies:
-  zenrouter: ^0.0.1
-```
-
 ## Quick Start: Imperative Navigation
 
 **Use ZenRouter like Navigator 1.0** - Simple, imperative, familiar.
@@ -134,6 +125,7 @@ class AppCoordinator extends Coordinator<AppRoute> {
 }
 
 // Base class for all your routes
+// 💡 Use sealed classes for exhaustive pattern matching!
 sealed class AppRoute extends RouteTarget with RouteUnique {
   @override
   NavigationPath getPath(AppCoordinator coordinator) => coordinator.root;
@@ -177,6 +169,127 @@ coordinator.replace(HomeRoute());
 coordinator.pop();
 ```
 
+## Best Practices
+
+### Use Sealed Classes for Exhaustive Routing
+
+> [!TIP]
+> **Always use `sealed class` for your route hierarchies!**
+>
+> Sealed classes enable exhaustive pattern matching in switch expressions, ensuring the compiler catches missing route cases at compile time.
+
+```dart
+// ✅ RECOMMENDED: Sealed class hierarchy
+sealed class AppRoute extends RouteTarget with RouteUnique {
+  @override
+  NavigationPath getPath(AppCoordinator coordinator) => coordinator.root;
+}
+
+class HomeRoute extends AppRoute with RouteBuilder { /* ... */ }
+class SettingsRoute extends AppRoute with RouteBuilder { /* ... */ }
+class ProfileRoute extends AppRoute with RouteBuilder { /* ... */ }
+
+// Now the compiler ensures you handle ALL routes
+Widget resolver(AppRoute route) {
+  return switch (route) {
+    HomeRoute() => RouteDestination.material(HomeScreen()),
+    SettingsRoute() => RouteDestination.material(SettingsScreen()),
+    ProfileRoute() => RouteDestination.material(ProfileScreen()),
+    // Compiler error if you forget a route! ✓
+  };
+}
+```
+
+**Benefits:**
+- **Compile-time safety**: Missing route cases cause compilation errors
+- **Refactoring confidence**: Adding/removing routes shows all affected code
+- **Better IDE support**: Auto-completion for all possible routes
+- **Pattern matching**: Use destructuring to extract route parameters
+
+```dart
+// Pattern matching with parameter extraction
+final destination = switch (route) {
+  ProfileRoute(:final userId) => RouteDestination.material(
+    ProfileScreen(userId: userId),
+  ),
+  // ...
+};
+```
+
+### Shell Routes Must Define a Host
+
+> [!IMPORTANT]
+> **When using shell routes, you MUST define a host implementation!**
+>
+> Shell routes require a concrete host class that implements `RouteShellHost` to provide the container UI (e.g., bottom navigation bar, drawer).
+
+```dart
+// ✅ CORRECT: Define a host for your shell
+sealed class HomeTabShell extends AppRoute with RouteShell<HomeTabShell> {
+  // Define the host as a static field
+  static final host = _$DefaultHomeTabShell();
+
+  @override
+  HomeTabShell get shellHost => host;
+
+  @override
+  NavigationPath getPath(AppCoordinator coordinator) => coordinator.home;
+}
+
+// The host implementation provides the container UI
+class _$DefaultHomeTabShell extends HomeTabShell
+    with RouteShellHost<HomeTabShell>, RouteBuilder {
+  @override
+  NavigationPath<HomeTabShell> getPath(AppCoordinator coordinator) =>
+      coordinator.home;
+
+  @override
+  NavigationPath<AppRoute> getHostPath(AppCoordinator coordinator) =>
+      coordinator.root;
+
+  @override
+  Widget build(AppCoordinator coordinator, BuildContext context) {
+    return Scaffold(
+      body: NavigationStack(
+        path: coordinator.home,
+        resolver: (route) => Coordinator.defaultResolver(coordinator, route),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        // Your navigation UI here
+      ),
+    );
+  }
+}
+
+// Now define your shell children
+class IdeaTab extends HomeTabShell with RouteBuilder {
+  @override
+  Uri toUri() => Uri.parse('/idea');
+  
+  @override
+  Widget build(coordinator, context) => Scaffold(...);
+}
+
+class NoteTab extends HomeTabShell with RouteBuilder {
+  @override
+  Uri toUri() => Uri.parse('/note');
+  
+  @override
+  Widget build(coordinator, context) => Scaffold(...);
+}
+```
+
+**Why is this required?**
+- The host provides the container UI (bottom nav, drawer, etc.)
+- Shell children render inside the host's `NavigationStack`
+- The host manages which child is currently active
+- Without a host, shell routes have nowhere to render
+
+**Common pattern:**
+- Use a private class name like `_$DefaultHomeTabShell` for the host
+- Store it as a static field in the sealed shell base class
+- All shell children reference the same host instance
+
 ## Core Concepts
 
 ### Two Modes of Operation
@@ -208,21 +321,25 @@ class MyRoute extends RouteTarget {
 > [!IMPORTANT]
 > **Routes with Parameters Must Override Equality**
 > 
-> By default, `RouteTarget` only compares routes by runtime type and navigation path. If your route has data fields (like `id` above), you **must** override `==` and `hashCode` to include those fields:
+> By default, `RouteTarget` only compares routes by runtime type and navigation path. If your route has data fields (like `id` above), you **must** override `==` and `hashCode` to include those fields.
+> 
+> **Always call the `equals()` helper function first** to check the base route properties, then check your custom properties:
 > 
 > ```dart
-> class MyRoute extends RouteTarget {
->   final String id;
->   MyRoute(this.id);
+> class ProfileRoute extends RouteTarget {
+>   final String userId;
+>   ProfileRoute(this.userId);
 >   
 >   @override
 >   bool operator ==(Object other) {
->     if (identical(this, other)) return true;
->     return other is MyRoute && other.id == id;
+>     // First check base route equality (runtime type and navigation path)
+>     if (!equals(other)) return false;
+>     // Then check custom properties
+>     return other is ProfileRoute && other.userId == userId;
 >   }
 >   
 >   @override
->   int get hashCode => id.hashCode;
+>   int get hashCode => Object.hash(super.hashCode, userId);
 > }
 > ```
 > 
@@ -318,33 +435,62 @@ class ProtectedRoute extends AppRoute with RouteRedirect<AppRoute> {
 
 #### Shell Navigation (Tab Bar)
 ```dart
+// Define the sealed shell base class
+sealed class HomeTabShell extends AppRoute with RouteShell<HomeTabShell> {
+  static final host = _$DefaultHomeTabShell();
+
+  @override
+  HomeTabShell get shellHost => host;
+
+  @override
+  NavigationPath getPath(AppCoordinator coordinator) => coordinator.home;
+}
+
 // Shell host (the scaffold with bottom navigation)
-class HomeShell extends AppRoute with RouteShellHost, RouteBuilder {
+class _$DefaultHomeTabShell extends HomeTabShell
+    with RouteShellHost<HomeTabShell>, RouteBuilder {
   @override
-  HomeShell get shellHost => this;
+  NavigationPath<HomeTabShell> getPath(AppCoordinator coordinator) =>
+      coordinator.home;
   
   @override
-  NavigationPath getPath(coordinator) => coordinator.root;
+  NavigationPath<AppRoute> getHostPath(AppCoordinator coordinator) =>
+      coordinator.root;
   
   @override
-  NavigationPath getHostPath(coordinator) => coordinator.root;
-  
-  @override
-  Widget build(coordinator, context) {
+  Widget build(AppCoordinator coordinator, BuildContext context) {
     return Scaffold(
-      body: NavigationStack(path: coordinator.shellPath, ...),
-      bottomNavigationBar: BottomNavigationBar(...),
+      body: NavigationStack(
+        path: coordinator.home,
+        resolver: (route) => Coordinator.defaultResolver(coordinator, route),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) => switch (index) {
+          0 => coordinator.replace(IdeaTab()),
+          1 => coordinator.replace(NoteTab()),
+          _ => null,
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.lightbulb), label: 'Idea'),
+          BottomNavigationBarItem(icon: Icon(Icons.note), label: 'Note'),
+        ],
+      ),
     );
   }
 }
 
 // Shell children (tab pages)
-class HomeTab extends AppRoute with RouteShell, RouteBuilder {
+class IdeaTab extends HomeTabShell with RouteBuilder {
   @override
-  HomeShell get shellHost => HomeShell();
+  Uri toUri() => Uri.parse('/idea');
   
   @override
-  NavigationPath getPath(coordinator) => coordinator.shellPath;
+  Widget build(coordinator, context) => Scaffold(...);
+}
+
+class NoteTab extends HomeTabShell with RouteBuilder {
+  @override
+  Uri toUri() => Uri.parse('/note');
   
   @override
   Widget build(coordinator, context) => Scaffold(...);
@@ -581,4 +727,4 @@ Contributions are welcome! Please read our contributing guidelines before submit
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Apache 2.0 License - see the LICENSE file for details.
