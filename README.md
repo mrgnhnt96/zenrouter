@@ -28,6 +28,18 @@ class SettingsRoute extends RouteTarget {}
 class ProfileRoute extends RouteTarget {
   final String userId;
   ProfileRoute(this.userId);
+
+  /// See later section why we need this
+  @override
+  bool operator ==(Object other) {
+    // First check base route equality (runtime type and navigation path)
+    if (!equals(other)) return false;
+    // Then check custom properties
+    return other is ProfileRoute && other.userId == userId;
+  }
+  
+  @override
+  int get hashCode => Object.hash(super.hashCode, userId);
 }
 ```
 
