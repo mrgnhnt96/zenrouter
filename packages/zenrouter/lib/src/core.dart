@@ -215,7 +215,9 @@ abstract mixin class RouteTarget extends Object {
 /// print('Form returned: $result');
 /// ```
 class NavigationPath<T extends RouteTarget> extends ChangeNotifier {
-  NavigationPath([List<T>? stack]) : _stack = stack ?? [];
+  NavigationPath([this.debugLabel, List<T>? stack]) : _stack = stack ?? [];
+
+  final String? debugLabel;
 
   /// The internal mutable stack.
   final List<T> _stack;
@@ -340,6 +342,9 @@ class NavigationPath<T extends RouteTarget> extends ChangeNotifier {
     _stack.remove(element);
     notifyListeners();
   }
+
+  @override
+  String toString() => '$runtimeType#${debugLabel ?? hashCode}';
 }
 
 /// Callback that builds a [Page] from a route and child widget.

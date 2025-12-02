@@ -37,7 +37,7 @@ class RootHostRoute extends AppRoute with RouteHost<AppRoute> {
   RouteHost? get host => null;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 
   @override
   NavigationPath get path => IntegrationCoordinator().root;
@@ -57,7 +57,7 @@ class TabShellHost extends AppRoute with RouteHost<AppRoute> {
   RouteHost? get host => RootHostRoute.instance;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 
   @override
   NavigationPath get path => IntegrationCoordinator().tabPath;

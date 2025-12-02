@@ -28,7 +28,8 @@ mixin CoordinatorDebug<T extends RouteUnique> on Coordinator<T> {
 
   /// Override this to provide a custom label for a navigation path.
   String debugLabel(NavigationPath path) {
-    if (path == root) return 'Root Path';
+    if (path.debugLabel != null) return path.debugLabel!;
+    if (path == root) return 'Root';
     return 'Path ${paths.indexOf(path) + 1}';
   }
 
@@ -104,9 +105,23 @@ class _DebugOverlayState<T extends RouteUnique>
   final TextEditingController _uriController = TextEditingController();
   int _selectedTabIndex = 0;
 
+  void _handleUriChanged() {
+    final newPath = widget.coordinator.currentUri.toString();
+    if (newPath != _uriController.text) {
+      _uriController.text = newPath;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.coordinator.addListener(_handleUriChanged);
+  }
+
   @override
   void dispose() {
     _uriController.dispose();
+    widget.coordinator.removeListener(_handleUriChanged);
     super.dispose();
   }
 
@@ -118,20 +133,48 @@ class _DebugOverlayState<T extends RouteUnique>
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: FloatingActionButton(
-              mini: true,
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              elevation: 4,
-              shape: const CircleBorder(
-                side: BorderSide(color: Colors.white24),
-              ),
-              onPressed: widget.coordinator.toggleDebugOverlay,
-              child: Badge(
-                isLabelVisible: widget.coordinator.problems > 0,
-                label: Text('${widget.coordinator.problems}'),
-                child: const Icon(Icons.bug_report, size: 20),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ListenableBuilder(
+                  listenable: _uriController,
+                  builder: (context, child) => Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    height: 40,
+                    margin: EdgeInsets.only(right: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Center(
+                      child: Text(
+                        _uriController.text,
+                        style: TextStyle(
+                          color: Colors.white,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                FloatingActionButton(
+                  mini: true,
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shape: const CircleBorder(
+                    side: BorderSide(color: Colors.white24),
+                  ),
+                  onPressed: widget.coordinator.toggleDebugOverlay,
+                  child: Badge(
+                    isLabelVisible: widget.coordinator.problems > 0,
+                    label: Text('${widget.coordinator.problems}'),
+                    child: const Icon(Icons.bug_report, size: 20),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -668,7 +711,7 @@ class _DebugOverlayState<T extends RouteUnique>
                       ),
                       cursorColor: const Color(0xFFEDEDED),
                       decoration: const InputDecoration(
-                        hintText: '/path...',
+                        hintText: 'Current path',
                         hintStyle: TextStyle(color: Color(0xFF444444)),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(

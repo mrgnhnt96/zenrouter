@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'core.dart';
 
 class FixedNavigationPath<T extends RouteUnique> extends NavigationPath<T> {
-  FixedNavigationPath(List<T> super.stack)
-    : assert(stack.isNotEmpty, 'Read-only path must have at least one route');
+  FixedNavigationPath(List<T> stack, {String? debugLabel})
+    : assert(stack.isNotEmpty, 'Read-only path must have at least one route'),
+      super(debugLabel, stack);
 
   int _activePathIndex = 0;
   int get activePathIndex => _activePathIndex;
@@ -78,16 +79,18 @@ mixin RouteUnique on RouteTarget {
 }
 
 enum HostType {
-  /// A navigator shell that mark host is a navigator
-  navigatorStack,
+  /// A navigation stack that mark host is a navigator
+  navigationStack,
 
   /// A manual shell that mark host is a custom widget
   manualStack;
 
   static Widget buildNavigationStack<T extends RouteUnique>(
     Coordinator coordinator,
-    NavigationPath<T> path,
-  ) => NavigationStack(
+    NavigationPath<T> path, [
+    GlobalKey<NavigatorState>? navigationKey,
+  ]) => NavigationStack(
+    navigatorKey: navigationKey,
     path: path,
     resolver: (route) => switch (route) {
       RouteDestinationMixin() => (route as RouteDestinationMixin).destination(
@@ -133,9 +136,12 @@ mixin RouteHost<T extends RouteUnique> on RouteUnique {
   @override
   Widget build(covariant Coordinator coordinator, BuildContext context) =>
       switch (hostType) {
-        HostType.navigatorStack => HostType.buildNavigationStack(
+        HostType.navigationStack => HostType.buildNavigationStack(
           coordinator,
           path as NavigationPath<T>,
+          host == null && hostType == HostType.navigationStack
+              ? coordinator.routerDelegate.navigatorKey
+              : null,
         ),
         HostType.manualStack => HostType.buildIndexedStack(
           coordinator,
@@ -206,7 +212,7 @@ abstract class Coordinator<T extends RouteUnique> with ChangeNotifier {
   /// The root (primary) navigation path.
   ///
   /// All coordinators have at least this one path.
-  final NavigationPath<T> root = NavigationPath();
+  final NavigationPath<T> root = NavigationPath('root');
 
   /// The host of [root] navigation path
   ///
@@ -245,7 +251,7 @@ abstract class Coordinator<T extends RouteUnique> with ChangeNotifier {
         path = host.path;
         pathSegment.add(path);
         switch (host.hostType) {
-          case HostType.navigatorStack:
+          case HostType.navigationStack:
             current = path.stack.lastOrNull as T?;
           case HostType.manualStack:
             current = (path as FixedNavigationPath).activeRoute as T;

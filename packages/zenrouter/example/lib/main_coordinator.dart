@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:zenrouter/zenrouter.dart';
 import 'package:zenrouter_devtools/zenrouter_devtools.dart';
@@ -47,7 +49,7 @@ class RootHost extends AppRoute with RouteDestinationMixin, RouteHost {
   NavigationPath get path => appCoordinator.root;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 
   @override
   Uri? toUri() => Uri.parse('/');
@@ -65,7 +67,7 @@ class HomeHost extends AppRoute
   NavigationPath get path => appCoordinator.homeStack;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 
   @override
   Uri? toUri() => Uri.parse('/home');
@@ -144,7 +146,7 @@ class SettingsHost extends AppRoute
   NavigationPath get path => appCoordinator.settingsStack;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 
   @override
   Uri? toUri() => Uri.parse('/settings');
@@ -184,7 +186,7 @@ class FeedTabHost extends AppRoute with RouteHost<AppRoute> {
   RouteHost? get host => TabBarHost.instance;
 
   @override
-  HostType get hostType => HostType.navigatorStack;
+  HostType get hostType => HostType.navigationStack;
 }
 
 class FeedTab extends AppRoute with RouteDestinationMixin {
@@ -215,6 +217,10 @@ class FeedTab extends AppRoute with RouteDestinationMixin {
         _FeedItem(
           title: 'Post 3',
           onTap: () => coordinator.push(FeedDetail(id: '3')),
+        ),
+        _FeedItem(
+          title: 'Post "profile" will redirect to ProfileDetail',
+          onTap: () => coordinator.push(FeedDetail(id: 'profile')),
         ),
       ],
     );
@@ -268,6 +274,10 @@ class SettingsTab extends AppRoute with RouteDestinationMixin {
           onPressed: () => coordinator.push(GeneralSettings()),
           child: const Text('Go to Full Settings'),
         ),
+        ElevatedButton(
+          onPressed: () => coordinator.replace(Login()),
+          child: const Text('Go to Login'),
+        ),
       ],
     );
   }
@@ -277,7 +287,7 @@ class SettingsTab extends AppRoute with RouteDestinationMixin {
 // Detail Routes (belong to HomeHost - navigatorStack host)
 // ============================================================================
 
-class FeedDetail extends AppRoute with RouteDestinationMixin {
+class FeedDetail extends AppRoute with RouteGuard, RouteRedirect {
   FeedDetail({required this.id});
 
   final String id;
@@ -313,12 +323,44 @@ class FeedDetail extends AppRoute with RouteDestinationMixin {
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
+    if (!equals(other)) return false;
     return other is FeedDetail && other.id == id;
   }
 
   @override
   int get hashCode => id.hashCode;
+
+  /// Showing confirm pop dialog
+  @override
+  FutureOr<bool> popGuard() async {
+    final confirm = await showDialog<bool>(
+      context: appCoordinator.navigator.context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm'),
+        content: const Text('Are you sure you want to leave this page?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    return confirm ?? false;
+  }
+
+  @override
+  FutureOr<AppRoute?> redirect() {
+    /// Redirect to other stack demonstration
+    /// The redirect path resolver by the Coordinator
+    if (id == 'profile') return ProfileDetail();
+    return this;
+  }
 }
 
 class ProfileDetail extends AppRoute with RouteDestinationMixin {
@@ -486,15 +528,15 @@ class NotFound extends AppRoute with RouteDestinationMixin {
 
 class AppCoordinator extends Coordinator<AppRoute> with CoordinatorDebug {
   // Navigation paths for different shells
-  final NavigationPath<AppRoute> homeStack = NavigationPath();
-  final NavigationPath<AppRoute> settingsStack = NavigationPath();
+  final NavigationPath<AppRoute> homeStack = NavigationPath('home');
+  final NavigationPath<AppRoute> settingsStack = NavigationPath('settings');
   final FixedNavigationPath<AppRoute> tabIndexed = FixedNavigationPath([
     FeedTabHost.instance,
     ProfileTab(),
     SettingsTab(),
-  ]);
+  ], debugLabel: 'home-tabs');
 
-  NavigationPath<AppRoute> feedTabStack = NavigationPath();
+  NavigationPath<AppRoute> feedTabStack = NavigationPath('feed-nested');
 
   @override
   RouteHost get rootHost => RootHost.instance;
@@ -507,16 +549,6 @@ class AppCoordinator extends Coordinator<AppRoute> with CoordinatorDebug {
     tabIndexed,
     feedTabStack,
   ];
-
-  @override
-  String debugLabel(NavigationPath<RouteTarget> path) {
-    if (path == root) return 'root';
-    if (path == homeStack) return 'home';
-    if (path == settingsStack) return 'settings';
-    if (path == tabIndexed) return 'tabs';
-    if (path == feedTabStack) return 'feeds';
-    return super.debugLabel(path);
-  }
 
   @override
   List<AppRoute> get debugRoutes => [
@@ -535,7 +567,7 @@ class AppCoordinator extends Coordinator<AppRoute> with CoordinatorDebug {
   AppRoute parseRouteFromUri(Uri uri) {
     return switch (uri.pathSegments) {
       // Root - default to feed tab (hosts will be set up automatically)
-      [] => FeedTab(),
+      [] => Login(),
       // Home routes - default to feed tab
       ['home'] => FeedTab(),
       ['home', 'tabs'] => FeedTab(), // Default to feed tab
@@ -549,9 +581,34 @@ class AppCoordinator extends Coordinator<AppRoute> with CoordinatorDebug {
       ['settings', 'general'] => GeneralSettings(),
       ['settings', 'account'] => AccountSettings(),
       ['settings', 'privacy'] => PrivacySettings(),
+      ['login'] => Login(),
       // Not found
       _ => NotFound(uri: uri),
     };
+  }
+}
+
+class Login extends AppRoute {
+  @override
+  RouteHost<RouteUnique>? get host => RootHost.instance;
+
+  @override
+  Uri? toUri() => Uri.parse('/login');
+
+  @override
+  Widget build(
+    covariant Coordinator<RouteUnique> coordinator,
+    BuildContext context,
+  ) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: Center(
+        child: TextButton(
+          onPressed: () => coordinator.replace(FeedTab()),
+          child: Text('Go to Feed'),
+        ),
+      ),
+    );
   }
 }
 
