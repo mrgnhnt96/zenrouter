@@ -82,7 +82,7 @@ class OnboardingFormData {
 // ROUTE DEFINITIONS - Each route carries its state
 // =============================================================================
 
-sealed class OnboardingRoute with RouteTarget {
+sealed class OnboardingRoute extends RouteTarget {
   Widget build(BuildContext context);
 }
 
@@ -114,7 +114,7 @@ class PersonalInfoStep extends OnboardingRoute with RouteGuard {
             final shouldExit = await _showExitConfirmation(context);
             if (shouldExit) {
               // Return to welcome instead of empty path
-              onboardingPath.clear();
+              onboardingPath.reset();
               onboardingPath.push(WelcomeStep());
             }
           },
@@ -176,7 +176,7 @@ class PersonalInfoStep extends OnboardingRoute with RouteGuard {
               child: TextButton(
                 onPressed: () {
                   // Return to welcome instead of empty path
-                  onboardingPath.clear();
+                  onboardingPath.reset();
                   onboardingPath.push(WelcomeStep());
                 },
                 child: const Text('Cancel'),
@@ -628,7 +628,7 @@ class SuccessStep extends OnboardingRoute {
               ElevatedButton(
                 onPressed: () {
                   // Return to welcome - path should never be empty
-                  onboardingPath.clear();
+                  onboardingPath.reset();
                   onboardingPath.push(WelcomeStep());
                 },
                 style: ElevatedButton.styleFrom(
@@ -846,7 +846,8 @@ class _ReviewItem extends StatelessWidget {
 // NAVIGATION PATH
 // =============================================================================
 
-final onboardingPath = NavigationPath<OnboardingRoute>()..push(WelcomeStep());
+final onboardingPath = DynamicNavigationPath<OnboardingRoute>()
+  ..push(WelcomeStep());
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});

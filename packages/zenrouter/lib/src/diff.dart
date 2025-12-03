@@ -1,4 +1,4 @@
-import 'package:zenrouter/src/core.dart';
+import 'path.dart';
 
 /// Represents a diff operation between two lists.
 sealed class DiffOp<T> {
@@ -160,7 +160,7 @@ List<DiffOp<T>> _backtrack<T>(
 /// - Inserts are processed in order
 /// - Keeps are no-ops
 void applyDiff<T extends RouteTarget>(
-  NavigationPath<T> path,
+  DynamicNavigationPath<T> path,
   List<DiffOp<T>> operations,
 ) {
   // Group operations by type for efficient processing
@@ -202,7 +202,7 @@ void applyDiff<T extends RouteTarget>(
       stackList.insert(insert.newIndex, element);
 
       // Clear and rebuild (this is safe because we're in sync)
-      path.clear();
+      path.reset();
       for (final route in stackList) {
         path.push(route);
       }

@@ -27,11 +27,7 @@ mixin CoordinatorDebug<T extends RouteUnique> on Coordinator<T> {
   }).length;
 
   /// Override this to provide a custom label for a navigation path.
-  String debugLabel(NavigationPath path) {
-    if (path.debugLabel != null) return path.debugLabel!;
-    if (path == root) return 'Root';
-    return 'Path ${paths.indexOf(path) + 1}';
-  }
+  String debugLabel(NavigationPath path) => path.toString();
 
   bool _debugOverlayOpen = false;
 
@@ -41,13 +37,13 @@ mixin CoordinatorDebug<T extends RouteUnique> on Coordinator<T> {
   }
 
   @override
-  Widget rootBuilder(BuildContext context) {
-    if (!debugEnabled) return super.rootBuilder(context);
+  Widget layoutBuilder(BuildContext context) {
+    if (!debugEnabled) return super.layoutBuilder(context);
 
     return ToastProvider.create(
       child: Stack(
         children: [
-          Builder(builder: (context) => super.rootBuilder(context)),
+          Builder(builder: (context) => super.layoutBuilder(context)),
           SafeArea(
             child: ToastThemeProvider(
               data: ToastTheme(
@@ -315,7 +311,7 @@ class _DebugOverlayState<T extends RouteUnique>
           itemCount: widget.coordinator.paths.length,
           itemBuilder: (context, index) {
             final path = widget.coordinator.paths[index];
-            final isActive = path == widget.coordinator.pathSegments.last;
+            final isActive = path == widget.coordinator.activeHostPaths.last;
             final isReadOnly = path is FixedNavigationPath;
 
             return Container(
@@ -404,7 +400,8 @@ class _DebugOverlayState<T extends RouteUnique>
                           ),
                         ),
                         // Only show pop button for non-read-only paths
-                        if (path.stack.isNotEmpty && !isReadOnly)
+                        if (path.stack.isNotEmpty &&
+                            path is DynamicNavigationPath)
                           _SmallIconButton(
                             icon: Icons.arrow_back,
                             tooltip: 'Pop Route',
@@ -414,14 +411,16 @@ class _DebugOverlayState<T extends RouteUnique>
                                     await path.pop();
                                     final routeName = () {
                                       try {
-                                        if (route is RouteHost) {
-                                          final shellPath = route.path;
+                                        if (route is RouteLayout) {
+                                          final shellPath = route.resolvePath(
+                                            widget.coordinator,
+                                          );
                                           final debugLabel = widget.coordinator
                                               .debugLabel(shellPath);
                                           // Don't clear here - onDidPop will handle it
                                           return 'all $debugLabel';
                                         }
-                                        return (route as RouteHost).toUri();
+                                        return (route as RouteLayout).toUri();
                                       } catch (_) {
                                         return route.toString();
                                       }
@@ -452,7 +451,7 @@ class _DebugOverlayState<T extends RouteUnique>
                         return InkWell(
                           onTap: () async {
                             try {
-                              await readOnlyPath.pushIndexed(routeIndex);
+                              await readOnlyPath.goToIndexed(routeIndex);
                               _showToast(
                                 'Navigated to $route',
                                 type: ToastType.push,
@@ -571,20 +570,21 @@ class _DebugOverlayState<T extends RouteUnique>
                                   ],
                                 ),
                               ),
-                              _SmallIconButton(
-                                icon: Icons.close,
-                                tooltip: 'Remove Route',
-                                onTap: path.stack.length > 1
-                                    ? () {
-                                        path.remove(route);
-                                        _showToast(
-                                          'Removed $route',
-                                          type: ToastType.remove,
-                                        );
-                                      }
-                                    : null,
-                                color: Colors.red[200],
-                              ),
+                              if (path is DynamicNavigationPath)
+                                _SmallIconButton(
+                                  icon: Icons.close,
+                                  tooltip: 'Remove Route',
+                                  onTap: path.stack.length > 1
+                                      ? () {
+                                          path.remove(route);
+                                          _showToast(
+                                            'Removed $route',
+                                            type: ToastType.remove,
+                                          );
+                                        }
+                                      : null,
+                                  color: Colors.red[200],
+                                ),
                             ],
                           ),
                         );

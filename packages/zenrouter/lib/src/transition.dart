@@ -1,5 +1,92 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+part of 'path.dart';
+
+/// Defines how a route should be displayed as a widget and wrapped in a page.
+///
+/// [RouteDestination] separates the route logic from the presentation.
+/// It contains:
+/// - [builder]: How to build the widget for this route
+/// - [pageBuilder]: How to wrap the widget in a Flutter [Page]
+/// - [guard]: Optional guard that applies even if the route doesn't have [RouteGuard]
+///
+/// Use the factory methods for common patterns:
+/// - [RouteDestination.material] - Material page transition
+/// - [RouteDestination.cupertino] - Cupertino page transition
+/// - [RouteDestination.sheet] - Bottom sheet presentation
+/// - [RouteDestination.dialog] - Dialog presentation
+/// - [RouteDestination.custom] - Custom page and transition
+class RouteDestination<T extends RouteTarget> {
+  /// Creates a custom route destination.
+  const RouteDestination.custom({
+    required this.builder,
+    required this.pageBuilder,
+    this.guard,
+  });
+
+  /// Creates a [MaterialPage] with a [Widget].
+  ///
+  /// This uses Material Design page transitions.
+  static RouteDestination<T> material<T extends RouteTarget>(
+    Widget child, {
+    RouteGuard? guard,
+  }) => RouteDestination<T>.custom(
+    builder: (context) => child,
+    pageBuilder: (context, route, child) =>
+        MaterialPage(key: route, child: child),
+    guard: guard,
+  );
+
+  /// Creates a [CupertinoPage] with a [Widget].
+  ///
+  /// This uses iOS-style page transitions.
+  static RouteDestination<T> cupertino<T extends RouteTarget>(
+    Widget child, {
+    RouteGuard? guard,
+  }) => RouteDestination<T>.custom(
+    builder: (context) => child,
+    pageBuilder: (context, route, child) =>
+        CupertinoPage(key: route, child: child),
+    guard: guard,
+  );
+
+  /// Creates a [CupertinoSheetPage] with a [Widget].
+  ///
+  /// This presents the route as a bottom sheet.
+  static RouteDestination<T> sheet<T extends RouteTarget>(
+    Widget child, {
+    RouteGuard? guard,
+  }) => RouteDestination<T>.custom(
+    builder: (context) => child,
+    pageBuilder: (context, route, child) =>
+        CupertinoSheetPage(key: route, builder: (context) => child),
+    guard: guard,
+  );
+
+  /// Creates a [DialogPage] with a [Widget].
+  ///
+  /// This presents the route as a dialog overlay.
+  static RouteDestination<T> dialog<T extends RouteTarget>(
+    Widget child, {
+    RouteGuard? guard,
+  }) => RouteDestination<T>.custom(
+    builder: (context) => child,
+    pageBuilder: (context, route, child) =>
+        DialogPage(key: route, child: child),
+    guard: guard,
+  );
+
+  /// Builds the widget for this route.
+  final WidgetBuilder builder;
+
+  /// Wraps the widget in a Flutter [Page].
+  final PageCallback<T> pageBuilder;
+
+  /// Optional guard that applies even if the route doesn't have [RouteGuard].
+  final RouteGuard? guard;
+}
+
+/// Callback that resolves a route to its visual representation.
+typedef RouteDestinationResolver<T extends RouteTarget> =
+    RouteDestination<T> Function(T route);
 
 /// A page that presents its route as a Cupertino-style bottom sheet.
 ///

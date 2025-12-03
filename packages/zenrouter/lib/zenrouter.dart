@@ -1,2 +1,2 @@
-export 'src/core.dart';
-export 'src/router.dart';
+export 'src/path.dart';
+export 'src/coordinator.dart';

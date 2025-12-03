@@ -39,15 +39,12 @@ class MyApp extends StatelessWidget {
 abstract class AppRoute extends RouteTarget with RouteUnique {}
 
 /// Home host - uses NavigatorStack for nested navigation within home
-class HomeHost extends AppRoute
-    with RouteDestinationMixin, RouteHost<AppRoute> {
+class HomeHost extends AppRoute with RouteLayout<AppRoute>, RouteTransition {
   static final instance = HomeHost();
 
   @override
-  NavigationPath get path => appCoordinator.homeStack;
-
-  @override
-  HostType get hostType => HostType.navigationStack;
+  DynamicNavigationPath resolvePath(AppCoordinator coordinator) =>
+      coordinator.homeStack;
 
   @override
   Uri toUri() => Uri.parse('/home');
@@ -56,24 +53,32 @@ class HomeHost extends AppRoute
   Widget build(AppCoordinator coordinator, BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Home'), backgroundColor: Colors.blue),
-      body: HostType.buildNavigationStack(coordinator, coordinator.homeStack),
+      body: RouteLayout.defaultBuildForDynamicPath(
+        coordinator,
+        coordinator.homeStack,
+      ),
     );
+  }
+
+  @override
+  RouteDestination<T> destination<T extends RouteUnique>(
+    AppCoordinator coordinator,
+  ) {
+    final context = coordinator.navigator.context;
+    return RouteDestination.cupertino(build(coordinator, context));
   }
 }
 
 /// Tab bar shell - uses Custom (IndexedStack) for tab navigation
-class TabBarHost extends AppRoute
-    with RouteDestinationMixin, RouteHost<AppRoute> {
+class TabBarHost extends AppRoute with RouteLayout<AppRoute> {
   static final instance = TabBarHost();
 
   @override
-  RouteHost? get host => HomeHost.instance;
+  RouteLayout? get layout => HomeHost.instance;
 
   @override
-  NavigationPath get path => appCoordinator.tabIndexed;
-
-  @override
-  HostType get hostType => HostType.manualStack;
+  FixedNavigationPath resolvePath(AppCoordinator coordinator) =>
+      coordinator.tabIndexed;
 
   @override
   Uri toUri() => Uri.parse('/home/tabs');
@@ -84,8 +89,10 @@ class TabBarHost extends AppRoute
     return Scaffold(
       body: Column(
         children: [
-          // Tab content (IndexedStack is built by RouteHostHost)
-          Expanded(child: HostType.buildIndexedStack(coordinator, path)),
+          // Tab content (IndexedStack is built by RouteHost)
+          Expanded(
+            child: RouteLayout.defaultBuildForFixedPath(coordinator, path),
+          ),
           // Tab bar
           Container(
             color: Colors.grey[200],
@@ -117,13 +124,10 @@ class TabBarHost extends AppRoute
 }
 
 /// Settings shell - uses NavigatorStack for nested settings navigation
-class SettingsHost extends AppRoute
-    with RouteDestinationMixin, RouteHost<AppRoute> {
+class SettingsHost extends AppRoute with RouteLayout<AppRoute> {
   @override
-  NavigationPath get path => appCoordinator.settingsStack;
-
-  @override
-  HostType get hostType => HostType.navigationStack;
+  DynamicNavigationPath resolvePath(AppCoordinator coordinator) =>
+      coordinator.settingsStack;
 
   @override
   Uri toUri() => Uri.parse('/settings');
@@ -132,7 +136,7 @@ class SettingsHost extends AppRoute
   Widget build(AppCoordinator coordinator, BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: HostType.buildNavigationStack(
+      body: RouteLayout.defaultBuildForDynamicPath(
         coordinator,
         coordinator.settingsStack,
       ),
@@ -153,25 +157,23 @@ class SettingsHost extends AppRoute
 // Tab Routes (belong to TabBarHost - custom host)
 // ============================================================================
 
-class FeedTabHost extends AppRoute with RouteHost<AppRoute> {
+class FeedTabHost extends AppRoute with RouteLayout<AppRoute> {
   static final instance = FeedTabHost();
 
   @override
   Uri toUri() => Uri.parse('/home/tabs/feed');
 
   @override
-  NavigationPath get path => appCoordinator.feedTabStack;
+  DynamicNavigationPath resolvePath(AppCoordinator coordinator) =>
+      coordinator.feedTabStack;
 
   @override
-  RouteHost? get host => TabBarHost.instance;
-
-  @override
-  HostType get hostType => HostType.navigationStack;
+  RouteLayout? get layout => TabBarHost.instance;
 }
 
-class FeedTab extends AppRoute with RouteDestinationMixin {
+class FeedTab extends AppRoute {
   @override
-  RouteHost? get host => FeedTabHost.instance;
+  RouteLayout? get layout => FeedTabHost.instance;
 
   @override
   Uri toUri() => Uri.parse('/home/tabs/feed');
@@ -207,9 +209,9 @@ class FeedTab extends AppRoute with RouteDestinationMixin {
   }
 }
 
-class ProfileTab extends AppRoute with RouteDestinationMixin {
+class ProfileTab extends AppRoute {
   @override
-  RouteHost? get host => TabBarHost.instance;
+  RouteLayout? get layout => TabBarHost.instance;
 
   @override
   Uri toUri() => Uri.parse('/home/tabs/profile');
@@ -233,9 +235,9 @@ class ProfileTab extends AppRoute with RouteDestinationMixin {
   }
 }
 
-class SettingsTab extends AppRoute with RouteDestinationMixin {
+class SettingsTab extends AppRoute {
   @override
-  RouteHost? get host => TabBarHost.instance;
+  RouteLayout? get layout => TabBarHost.instance;
 
   @override
   Uri toUri() => Uri.parse('/home/tabs/settings');
@@ -274,7 +276,7 @@ class FeedDetail extends AppRoute
   final String id;
 
   @override
-  RouteHost? get host => FeedTabHost.instance;
+  RouteLayout? get layout => FeedTabHost.instance;
 
   @override
   Uri toUri() => Uri.parse('/home/feed/$id');
@@ -304,7 +306,7 @@ class FeedDetail extends AppRoute
 
   @override
   bool operator ==(Object other) {
-    if (!equals(other)) return false;
+    if (!compareWith(other)) return false;
     return other is FeedDetail && other.id == id;
   }
 
@@ -344,15 +346,18 @@ class FeedDetail extends AppRoute
   }
 
   @override
+  DeeplinkStrategy get deeplinkStrategy => DeeplinkStrategy.custom;
+
+  @override
   FutureOr<void> deeplinkHandler(AppCoordinator coordinator, Uri uri) {
     coordinator.replace(FeedTab());
     coordinator.push(this);
   }
 }
 
-class ProfileDetail extends AppRoute with RouteDestinationMixin {
+class ProfileDetail extends AppRoute {
   @override
-  RouteHost? get host => HomeHost.instance;
+  RouteLayout? get layout => HomeHost.instance;
 
   @override
   Uri toUri() => Uri.parse('/home/profile/detail');
@@ -385,11 +390,11 @@ class ProfileDetail extends AppRoute with RouteDestinationMixin {
 // Settings Routes (belong to SettingsHost - navigatorStack host)
 // ============================================================================
 
-class GeneralSettings extends AppRoute with RouteDestinationMixin {
+class GeneralSettings extends AppRoute {
   final _settingsHost = SettingsHost();
 
   @override
-  RouteHost? get host => _settingsHost;
+  RouteLayout? get layout => _settingsHost;
 
   @override
   Uri toUri() => Uri.parse('/settings/general');
@@ -417,11 +422,11 @@ class GeneralSettings extends AppRoute with RouteDestinationMixin {
   }
 }
 
-class AccountSettings extends AppRoute with RouteDestinationMixin {
+class AccountSettings extends AppRoute {
   final _settingsHost = SettingsHost();
 
   @override
-  RouteHost? get host => _settingsHost;
+  RouteLayout? get layout => _settingsHost;
 
   @override
   Uri toUri() => Uri.parse('/settings/account');
@@ -444,11 +449,11 @@ class AccountSettings extends AppRoute with RouteDestinationMixin {
   }
 }
 
-class PrivacySettings extends AppRoute with RouteDestinationMixin {
+class PrivacySettings extends AppRoute {
   final _settingsHost = SettingsHost();
 
   @override
-  RouteHost? get host => _settingsHost;
+  RouteLayout? get layout => _settingsHost;
 
   @override
   Uri toUri() => Uri.parse('/settings/privacy');
@@ -475,7 +480,7 @@ class PrivacySettings extends AppRoute with RouteDestinationMixin {
 // Not Found Route
 // ============================================================================
 
-class NotFound extends AppRoute with RouteDestinationMixin {
+class NotFound extends AppRoute {
   NotFound({required this.uri});
 
   final Uri uri;
@@ -512,15 +517,21 @@ class NotFound extends AppRoute with RouteDestinationMixin {
 
 class AppCoordinator extends Coordinator<AppRoute> with CoordinatorDebug {
   // Navigation paths for different shells
-  final NavigationPath<AppRoute> homeStack = NavigationPath('home');
-  final NavigationPath<AppRoute> settingsStack = NavigationPath('settings');
+  final DynamicNavigationPath<AppRoute> homeStack = DynamicNavigationPath(
+    'home',
+  );
+  final DynamicNavigationPath<AppRoute> settingsStack = DynamicNavigationPath(
+    'settings',
+  );
   final FixedNavigationPath<AppRoute> tabIndexed = FixedNavigationPath([
     FeedTabHost.instance,
     ProfileTab(),
     SettingsTab(),
-  ], debugLabel: 'home-tabs');
+  ], 'home-tabs');
 
-  NavigationPath<AppRoute> feedTabStack = NavigationPath('feed-nested');
+  DynamicNavigationPath<AppRoute> feedTabStack = DynamicNavigationPath(
+    'feed-nested',
+  );
 
   @override
   List<NavigationPath> get paths => [
