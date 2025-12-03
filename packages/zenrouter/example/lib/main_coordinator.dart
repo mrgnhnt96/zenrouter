@@ -61,11 +61,11 @@ class HomeHost extends AppRoute with RouteLayout<AppRoute>, RouteTransition {
   }
 
   @override
-  RouteDestination<T> destination<T extends RouteUnique>(
+  StackTransition<T> transition<T extends RouteUnique>(
     AppCoordinator coordinator,
   ) {
     final context = coordinator.navigator.context;
-    return RouteDestination.cupertino(build(coordinator, context));
+    return StackTransition.cupertino(build(coordinator, context));
   }
 }
 

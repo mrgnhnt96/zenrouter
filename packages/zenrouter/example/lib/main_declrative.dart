@@ -79,8 +79,8 @@ class _DemoScreenState extends State<DemoScreen> {
                 if (showSpecial) SpecialRoute(),
               ],
               resolver: (route) => switch (route) {
-                SpecialRoute() => RouteDestination.sheet(_buildSpecial()),
-                PageRoute(:final pageNumber) => RouteDestination.material(
+                SpecialRoute() => StackTransition.sheet(_buildSpecial()),
+                PageRoute(:final pageNumber) => StackTransition.material(
                   _buildPage(pageNumber),
                 ),
                 _ => throw UnimplementedError(),

@@ -10,9 +10,9 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
     this.navigatorKey,
   });
 
-  static Widget declarative<T extends RouteTarget>({
+  static DeclarativeNavigationStack<T> declarative<T extends RouteTarget>({
     required List<T> routes,
-    required RouteDestinationResolver<T> resolver,
+    required StackTransitionResolver<T> resolver,
     GlobalKey<NavigatorState>? navigatorKey,
     String? debugLabel,
   }) {
@@ -34,7 +34,7 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
   final DynamicNavigationPath<T> path;
 
   /// Callback that converts routes to destinations.
-  final RouteDestinationResolver<T> resolver;
+  final StackTransitionResolver<T> resolver;
 
   /// Optional route to push when the stack initializes.
   final T? defaultRoute;
@@ -114,7 +114,7 @@ class DeclarativeNavigationStack<T extends RouteTarget> extends StatefulWidget {
   final List<T> routes;
   final GlobalKey<NavigatorState>? navigatorKey;
   final String? debugLabel;
-  final RouteDestinationResolver<T> resolver;
+  final StackTransitionResolver<T> resolver;
 
   @override
   State<DeclarativeNavigationStack<T>> createState() =>

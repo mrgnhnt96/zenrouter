@@ -857,18 +857,18 @@ class HomeView extends StatelessWidget {
     return NavigationStack<OnboardingRoute>(
       path: onboardingPath,
       resolver: (route) => switch (route) {
-        WelcomeStep() => RouteDestination.material(route.build(context)),
-        PersonalInfoStep() => RouteDestination.material(
+        WelcomeStep() => StackTransition.material(route.build(context)),
+        PersonalInfoStep() => StackTransition.material(
           route.build(context),
           guard: route,
         ),
-        PreferencesStep() => RouteDestination.material(route.build(context)),
-        AccountSetupStep() => RouteDestination.material(
+        PreferencesStep() => StackTransition.material(route.build(context)),
+        AccountSetupStep() => StackTransition.material(
           route.build(context),
           guard: route,
         ),
-        ReviewStep() => RouteDestination.material(route.build(context)),
-        SuccessStep() => RouteDestination.material(route.build(context)),
+        ReviewStep() => StackTransition.material(route.build(context)),
+        SuccessStep() => StackTransition.material(route.build(context)),
       },
     );
   }

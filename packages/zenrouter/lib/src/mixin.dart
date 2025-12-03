@@ -7,34 +7,9 @@ part of 'path.dart';
 /// - [custom]: Custom strategy for handling deep links
 enum DeeplinkStrategy { replace, push, custom }
 
-/// Provides custom deep link handling logic.
-///
-/// Use [RouteDeepLink] when you need more than basic URI-to-route mapping:
-/// - Multi-step navigation setup (e.g., ensure parent route exists first)
-/// - Analytics tracking for deep links
-/// - Complex state restoration from URIs
-///
-/// The [deeplinkHandler] is called instead of the default push/replace behavior
-/// when this route is opened from a deep link.
-///
-/// Example:
-/// ```dart
-/// class ProductDetail extends AppRoute with RouteDeepLink {
-///   @override
-///   FutureOr<void> deeplinkHandler(coordinator, uri) {
-///     // Ensure category route is in stack first
-///     coordinator.replace(CategoryRoute());
-///     coordinator.push(this);
-///     analytics.logDeepLink(uri);
-///   }
-/// }
-/// ```
 mixin RouteDeepLink on RouteUnique {
   DeeplinkStrategy get deeplinkStrategy;
 
-  /// Custom handler for when this route is opened via deep link.
-  ///
-  /// Typically, you'll manually manage the navigation stack in this method.
   FutureOr<void> deeplinkHandler(covariant Coordinator coordinator, Uri uri) =>
       null;
 }
@@ -70,20 +45,13 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
     path: path,
     coordinator: coordinator,
     resolver: (route) => switch (route) {
-      RouteTransition() => (route as RouteTransition).destination(coordinator),
-      _ => RouteDestination.material(
+      RouteTransition() => (route as RouteTransition).transition(coordinator),
+      _ => StackTransition.material(
         Builder(builder: (context) => route.build(coordinator, context)),
       ),
     },
   );
 
-  /// The navigation path associated with this host.
-  ///
-  /// This method is called by the coordinator to get the navigation path
-  /// for this host. The path is used to manage the navigation stack.
-  ///
-  /// @param coordinator The coordinator that is managing this host.
-  /// @return The navigation path for this host.
   NavigationPath resolvePath(covariant Coordinator coordinator);
 
   @override
@@ -125,15 +93,11 @@ mixin RouteRedirect<T extends RouteTarget> on RouteTarget {
   FutureOr<T?> redirect();
 }
 
-/// The base class for all routes in the navigation system.
 abstract class RouteTarget extends Object {
-  /// Completer that is completed when the route is popped.
   final Completer<dynamic> _onResult = Completer();
 
-  /// The navigation path this route belongs to, if any.
   NavigationPath? _path;
 
-  /// The result value to return when the route is popped.
   Object? _resultValue;
 
   @override
@@ -146,6 +110,7 @@ abstract class RouteTarget extends Object {
   /// Checks if this route is equal to another route.
   ///
   /// Two routes are equal if they have the same runtime type and navigation path.
+  /// Must call this function when you override == operator.
   bool compareWith(Object other) {
     if (identical(this, other)) return true;
     return (other is RouteTarget) &&
@@ -172,9 +137,9 @@ abstract class RouteTarget extends Object {
 }
 
 mixin RouteTransition on RouteUnique {
-  RouteDestination<T> destination<T extends RouteUnique>(
+  StackTransition<T> transition<T extends RouteUnique>(
     covariant Coordinator coordinator,
-  ) => RouteDestination.material(
+  ) => StackTransition.material(
     Builder(builder: (context) => build(coordinator, context)),
   );
 }
