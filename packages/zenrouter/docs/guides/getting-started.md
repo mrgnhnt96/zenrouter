@@ -170,12 +170,7 @@ class PageRoute extends RouteTarget {
   
   // IMPORTANT: Implement equality for Myers diff!
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is PageRoute && other.pageNumber == pageNumber);
-  
-  @override
-  int get hashCode => Object.hash(runtimeType, pageNumber);
+  List<Object?> get props => [pageNumber];
 }
 ```
 

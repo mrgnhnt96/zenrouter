@@ -187,13 +187,7 @@ class FirstTabChild extends AppRoute {
   }
 
   @override
-  operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is FirstTabChild && other.message == message;
-  }
-
-  @override
-  int get hashCode => Object.hash(super.hashCode, message);
+  List<Object?> get props => [message];
 }
 
 class SecondTab extends AppRoute {

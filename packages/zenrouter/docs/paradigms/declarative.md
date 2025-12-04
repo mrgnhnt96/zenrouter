@@ -99,12 +99,7 @@ class PageRoute extends RouteTarget {
   
   // IMPORTANT: Must implement equality for diff to work!
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is PageRoute && other.pageNumber == pageNumber);
-  
-  @override
-  int get hashCode => Object.hash(runtimeType, pageNumber);
+  List<Object?> get props => [pageNumber];
 }
 
 class SpecialRoute extends RouteTarget {}
@@ -490,13 +485,7 @@ class ItemRoute extends RouteTarget {
   ItemRoute(this.itemId);
   
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is ItemRoute && other.itemId == itemId;
-  }
-  
-  @override
-  int get hashCode => Object.hash(runtimeType, itemId);
+  List<Object?> get props => [itemId];
 }
 ```
 

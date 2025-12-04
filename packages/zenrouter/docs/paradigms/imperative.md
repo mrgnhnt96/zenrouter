@@ -337,7 +337,7 @@ class MyRoute extends RouteTarget {
 
 ### ✅ DO: Implement Equality for Parameterized Routes
 
-Routes with parameters must override `==` and `hashCode`:
+Routes with parameters must override `props`:
 
 ```dart
 class ProfileRoute extends RouteTarget {
@@ -346,13 +346,7 @@ class ProfileRoute extends RouteTarget {
   ProfileRoute(this.userId);
   
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false; // Check base equality first
-    return other is ProfileRoute && other.userId == userId;
-  }
-  
-  @override
-  int get hashCode => Object.hash(super.hashCode, userId);
+  List<Object?> get props => [userId];
 }
 ```
 

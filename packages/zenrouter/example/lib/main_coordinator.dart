@@ -148,15 +148,6 @@ class SettingsLayout extends AppRoute with RouteLayout<AppRoute> {
       ),
     );
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is SettingsLayout;
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
 }
 
 // ============================================================================
@@ -310,13 +301,7 @@ class FeedDetail extends AppRoute
   }
 
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is FeedDetail && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
+  List<Object?> get props => [id];
 
   /// Showing confirm pop dialog
   @override

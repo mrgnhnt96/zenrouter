@@ -240,13 +240,7 @@ class FeedDetail extends AppRoute with RouteGuard, RouteRedirect, RouteDeepLink 
   }
   
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is FeedDetail && other.id == id;
-  }
-  
-  @override
-  int get hashCode => Object.hash(super.hashCode, id);
+  List<Object?> get props => [id];
   
   // Guard: Confirm before leaving
   @override
@@ -331,11 +325,6 @@ class SettingsLayout extends AppRoute with RouteLayout<AppRoute> {
     );
   }
   
-  @override
-  bool operator ==(Object other) => other is SettingsLayout;
-  
-  @override
-  int get hashCode => runtimeType.hashCode;
 }
 
 class GeneralSettings extends AppRoute {

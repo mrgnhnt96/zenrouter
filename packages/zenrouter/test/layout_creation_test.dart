@@ -80,15 +80,6 @@ class TestSettingsLayout extends TestRoute with RouteLayout<TestRoute> {
   Widget build(TestCoordinator coordinator, BuildContext context) {
     return const Placeholder();
   }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is TestSettingsLayout;
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode;
 }
 
 /// TabBar layout - nested in HomeLayout
@@ -153,13 +144,7 @@ class TestFeedRoute extends TestRoute {
   }
 
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is TestFeedRoute && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
+  List<Object?> get props => [id];
 }
 
 /// Profile tab route

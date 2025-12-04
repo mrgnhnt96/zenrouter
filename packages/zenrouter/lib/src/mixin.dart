@@ -91,6 +91,9 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
 
   @override
   operator ==(Object other) => other.runtimeType == runtimeType;
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 mixin RouteRedirect<T extends RouteTarget> on RouteTarget {
@@ -119,7 +122,12 @@ abstract class RouteTarget extends Object {
 
   @override
   int get hashCode =>
-      runtimeType.hashCode ^ _path.hashCode ^ _onResult.hashCode;
+      runtimeType.hashCode ^
+      _path.hashCode ^
+      _onResult.hashCode ^
+      mapPropsToHashCode(props);
+
+  List<Object?> get props => [];
 
   @override
   operator ==(Object other) => compareWith(other);
@@ -128,17 +136,19 @@ abstract class RouteTarget extends Object {
   ///
   /// Two routes are equal if they have the same runtime type and navigation path.
   /// Must call this function when you override == operator.
+  @pragma('vm:prefer-inline')
   bool compareWith(Object other) {
     if (identical(this, other)) return true;
-    return (other is RouteTarget) &&
+    return other is RouteTarget &&
         other.runtimeType == runtimeType &&
-        other._path == _path;
+        iterableEquals(props, other.props);
   }
 
   void onDidPop(Object? result, covariant Coordinator? coordinator) {}
 
   @override
-  String toString() => '$runtimeType';
+  String toString() =>
+      '$runtimeType${props.isEmpty ? '' : '[${props.map((p) => p.toString()).join(',')}]'}';
 
   void completeOnResult(
     Object? result,

@@ -30,12 +30,7 @@ class PageRoute extends RouteTarget {
   PageRoute(this.pageNumber);
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is PageRoute && other.pageNumber == pageNumber);
-
-  @override
-  int get hashCode => Object.hash(runtimeType, pageNumber);
+  List<Object?> get props => [pageNumber];
 }
 
 class SpecialRoute extends RouteTarget {}

@@ -8,13 +8,7 @@ class TestRoute extends RouteTarget {
   final String id;
 
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is TestRoute && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
+  List<Object?> get props => [id];
 
   @override
   String toString() => 'TestRoute($id)';
@@ -325,7 +319,7 @@ void main() {
       expect(path.stack[1].id, 'c');
     });
 
-    test('applies only inserts', () {
+    test('applies only inserts', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
         TestRoute('c'),
@@ -338,6 +332,7 @@ void main() {
       ];
 
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 3);
       expect(path.stack[0].id, 'a');
@@ -345,7 +340,7 @@ void main() {
       expect(path.stack[2].id, 'c');
     });
 
-    test('applies mixed operations', () {
+    test('applies mixed operations', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
         TestRoute('b'),
@@ -360,6 +355,7 @@ void main() {
       ];
 
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 3);
       expect(path.stack[0].id, 'a');
@@ -389,7 +385,7 @@ void main() {
       expect(path.stack[1].id, 'd');
     });
 
-    test('applies multiple inserts', () {
+    test('applies multiple inserts', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
         TestRoute('d'),
@@ -403,6 +399,7 @@ void main() {
       ];
 
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 4);
       expect(path.stack[0].id, 'a');
@@ -411,7 +408,7 @@ void main() {
       expect(path.stack[3].id, 'd');
     });
 
-    test('handles complete replacement', () {
+    test('handles complete replacement', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
         TestRoute('b'),
@@ -425,6 +422,7 @@ void main() {
       ];
 
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 2);
       expect(path.stack[0].id, 'x');
@@ -449,7 +447,7 @@ void main() {
       expect(path.stack[0].id, 'a');
     });
 
-    test('handles insert beyond stack length', () {
+    test('handles insert beyond stack length', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
       ]);
@@ -459,6 +457,7 @@ void main() {
       ];
 
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       // Should append to end
       expect(path.stack.length, 2);
@@ -482,7 +481,7 @@ void main() {
   });
 
   group('Integration - myersDiff + applyDiff', () {
-    test('correctly transforms stack from old to new state', () {
+    test('correctly transforms stack from old to new state', () async {
       final oldRoutes = <TestRoute>[
         TestRoute('home'),
         TestRoute('profile'),
@@ -498,6 +497,7 @@ void main() {
 
       final ops = myersDiff<TestRoute>(oldRoutes, newRoutes);
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 3);
       expect(path.stack[0].id, 'home');
@@ -505,7 +505,7 @@ void main() {
       expect(path.stack[2].id, 'settings');
     });
 
-    test('handles complex transformation', () {
+    test('handles complex transformation', () async {
       final oldRoutes = <TestRoute>[
         TestRoute('a'),
         TestRoute('b'),
@@ -524,6 +524,7 @@ void main() {
 
       final ops = myersDiff<TestRoute>(oldRoutes, newRoutes);
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 5);
       expect(path.stack[0].id, 'a');
@@ -533,13 +534,14 @@ void main() {
       expect(path.stack[4].id, 'z');
     });
 
-    test('handles empty to populated', () {
+    test('handles empty to populated', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[]);
 
       final newRoutes = <TestRoute>[TestRoute('a'), TestRoute('b')];
 
       final ops = myersDiff<TestRoute>([], newRoutes);
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(path.stack.length, 2);
       expect(path.stack[0].id, 'a');
@@ -558,7 +560,7 @@ void main() {
       expect(path.stack, isEmpty);
     });
 
-    test('notifications are triggered', () {
+    test('notifications are triggered', () async {
       final path = StackPath.navigationStack('test', <TestRoute>[
         TestRoute('a'),
       ]);
@@ -570,6 +572,7 @@ void main() {
 
       final ops = [Insert<TestRoute>(TestRoute('b'), 1)];
       applyDiff(path, ops);
+      await Future.delayed(Duration.zero);
 
       expect(notified, isTrue);
     });

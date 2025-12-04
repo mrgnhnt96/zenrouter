@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'diff.dart';
 import 'coordinator.dart';
+import 'equaltable_utils.dart';
 
 part 'mixin.dart';
 part 'stack.dart';

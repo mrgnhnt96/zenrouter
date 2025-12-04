@@ -148,13 +148,7 @@ class UserRoute extends AppRoute {
   }
   
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is UserRoute && other.userId == userId;
-  }
-  
-  @override
-  int get hashCode => Object.hash(super.hashCode, userId);
+  List<Object?> get props => [userId];
 }
 ```
 
@@ -280,11 +274,6 @@ class SettingsLayout extends AppRoute with RouteLayout<AppRoute> {
     );
   }
   
-  @override
-  bool operator ==(Object other) => other is SettingsLayout;
-  
-  @override
-  int get hashCode => runtimeType.hashCode;
 }
 
 // Settings routes point to settings layout using Type reference
