@@ -1,6 +1,6 @@
 name: zenrouter_devtools
 description: "Devtools for ZenRouter"
-version: 0.0.1
+version: 0.1.0
 homepage: https://github.com/definev/zenrouter/packages/zenrouter_devtools
 
 environment:

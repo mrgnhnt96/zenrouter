@@ -29,14 +29,6 @@ Each mixin adds specific capabilities:
 ```
 Which mixins do I need?
 │
-├─ Using Coordinator?
-│  ├─ Yes → Add RouteUnique ✓
-│  └─ No → Just extend RouteTarget
-│
-├─ Creating a navigation host (tabs, navigation-stack)?
-│  ├─ Yes → Add RouteLayout ✓
-│  └─ No → Continue
-│
 ├─ Need custom page transitions?
 │  ├─ Yes → Add RouteTransition ✓
 │  └─ No → Continue
@@ -47,6 +39,14 @@ Which mixins do I need?
 │
 ├─ Conditional routing (auth, permissions)?
 │  ├─ Yes → Add RouteRedirect ✓
+│  └─ No → Continue
+│
+├─ Using Coordinator?
+│  ├─ Yes → Add RouteUnique ✓
+│  └─ No → Just extend RouteTarget
+│
+├─ Creating a navigation host (tabs, navigation-stack)?
+│  ├─ Yes → Add RouteLayout ✓
 │  └─ No → Continue
 │
 └─ Custom deep link handling?
