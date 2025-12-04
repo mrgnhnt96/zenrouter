@@ -1,4 +1,7 @@
 ## 0.1.1
+- Fix broken document link by update it to github link
+
+## 0.1.1
 - Fix broken document link
 
 ## 0.1.0

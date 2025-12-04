@@ -16,8 +16,8 @@ The coordinator pattern provides a centralized routing system with deep linking,
 - You're building a large app with many routes
 
 ❌ **Don't use coordinator when:**
-- Building simple mobile-only apps (use [Imperative](imperative.md) instead)
-- Navigation is purely state-driven (use [Declarative](declarative.md) instead)
+- Building simple mobile-only apps (use [Imperative](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md) instead)
+- Navigation is purely state-driven (use [Declarative](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md) instead)
 - You don't need URL synchronization
 
 ## Core Concept
@@ -503,7 +503,7 @@ Now you have:
 
 For complete API documentation including all methods, properties, and advanced usage, see:
 
-**[→ Coordinator API Reference](../api/coordinator.md)**
+**[→ Coordinator API Reference](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/coordinator.md)**
 
 Quick reference for `Coordinator`:
 
@@ -816,8 +816,8 @@ coordinator.recoverRouteFromUri(
 
 ## See Also
 
-- [Imperative Navigation](imperative.md) - Direct stack control
-- [Declarative Navigation](declarative.md) - State-driven routing
-- [Route Mixins Guide](../api/mixins.md) - All available mixins
-- [Coordinator API](../api/coordinator.md) - Complete API reference
-- [Deep Linking Guide](../guides/deep-linking.md) - Deep linking setup
+- [Imperative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md) - Direct stack control
+- [Declarative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md) - State-driven routing
+- [Route Mixins Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/mixins.md) - All available mixins
+- [Coordinator API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/coordinator.md) - Complete API reference
+- [Deep Linking Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/guides/deep-linking.md) - Deep linking setup

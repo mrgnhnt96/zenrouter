@@ -1,10 +1,10 @@
 name: zenrouter_devtools
 description: "Devtools for ZenRouter"
 version: 0.1.0
-homepage: https://github.com/definev/zenrouter/packages/zenrouter_devtools
+homepage: https://github.com/definev/zenrouter/tree/main/packages/zenrouter_devtools
 
 environment:
-  sdk: ^3.8.0
+  sdk: ^3.7.0
   flutter: ">=3.0.0"
 
 resolution: workspace

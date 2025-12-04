@@ -14,8 +14,8 @@ The imperative paradigm gives you full, explicit control over the navigation sta
 - You need fine-grained control over the stack
 
 ❌ **Don't use imperative navigation when:**
-- You need deep linking or web URL support (use [Coordinator](coordinator.md) instead)
-- Your navigation is driven by state changes (use [Declarative](declarative.md) instead)
+- You need deep linking or web URL support (use [Coordinator](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md) instead)
+- Your navigation is driven by state changes (use [Declarative](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md) instead)
 - You want automatic browser back button support
 
 ## Core Concept
@@ -294,7 +294,7 @@ class OnboardingApp extends StatelessWidget {
 
 For complete API documentation including all methods, properties, and advanced usage, see:
 
-**[→ Navigation Paths API Reference](../api/navigation-paths.md#navigationpath)**
+**[→ Navigation Paths API Reference](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#navigationpath)**
 
 Quick reference for `NavigationPath`:
 
@@ -463,7 +463,7 @@ void navigateBasedOnState() {
 
 ### Moving to Declarative
 
-If your navigation becomes state-driven, consider [Declarative Navigation](declarative.md):
+If your navigation becomes state-driven, consider [Declarative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md):
 
 ```dart
 // Instead of imperatively pushing based on state...
@@ -483,7 +483,7 @@ NavigationStack.declarative(
 
 ### Moving to Coordinator
 
-If you need deep linking or web support, upgrade to [Coordinator](coordinator.md):
+If you need deep linking or web support, upgrade to [Coordinator](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md):
 
 ```dart
 // 1. Add RouteUnique to your routes
@@ -518,7 +518,7 @@ MaterialApp.router(
 
 ## See Also
 
-- [Declarative Navigation](declarative.md) - State-driven routing
-- [Coordinator Pattern](coordinator.md) - Deep linking and web support
-- [Route Mixins Guide](../api/mixins.md) - RouteGuard, RouteRedirect, and more
-- [NavigationPath API](../api/navigation-paths.md#navigationpath) - Complete API reference
+- [Declarative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md) - State-driven routing
+- [Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md) - Deep linking and web support
+- [Route Mixins Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/mixins.md) - RouteGuard, RouteRedirect, and more
+- [NavigationPath API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#navigationpath) - Complete API reference

@@ -63,15 +63,8 @@ class Profile extends RouteTarget {
   Profile(this.id);
   final String id;
 
-  /// Override == operator to prevent unwanted behavior when pushing the same route
-  @override
-  operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is Profile && other.id == id;
-  }
-
-  @override
-  int get hashCode => Object.hash(super.hashCode, id);
+  /// Make sure to add `id` in `props` to prevent unwanted behavior when pushing the same route
+  List<Object?> get props => [id];
 }
 
 final appPath = NavigationPath();
@@ -96,7 +89,7 @@ class AppRouter extends StatelessWidget {
 }
 ```
 
-That's it! You've successfully set up imperative routing for your app. To navigate, simply call `push()` to open a new route (you can `await` the result when it's popped), and `pop()` to go back. The `NavigationPath` class offers many handy operations—see more in the [NavigationPath API documentation](doc/api/navigation-paths.md#navigationpath).
+That's it! You've successfully set up imperative routing for your app. To navigate, simply call `push()` to open a new route (you can `await` the result when it's popped), and `pop()` to go back. The `NavigationPath` class offers many handy operations—see more in the [NavigationPath API documentation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#navigationpath).
 
 ```dart
 // Open Profile route
@@ -115,7 +108,7 @@ appPath.pop();
 - Migrating from Navigator 1.0
 - You want simple, direct control
 
-[→ Learn Imperative Routing](doc/paradigms/imperative.md)
+[→ Learn Imperative Routing](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md)
 
 ---
 
@@ -177,7 +170,7 @@ That's it! The navigation stack stays perfectly in sync with your state—no man
 - State-driven UIs
 - React-like declarative patterns
 
-[→ Learn Declarative Routing](doc/paradigms/declarative.md)
+[→ Learn Declarative Routing](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md)
 
 ---
 
@@ -218,6 +211,9 @@ class HomeRoute extends AppRoute {
 class ProfileRoute extends AppRoute {
   ProfileRoute(this.userId);
   final String userId;
+
+  @override
+  List<Object?> get props => [userId];
   
   @override
   Uri toUri() => Uri.parse('/profile/$userId');
@@ -226,15 +222,6 @@ class ProfileRoute extends AppRoute {
   Widget build(AppCoordinator coordinator, BuildContext context) {
     return ProfilePage(userId: userId, coordinator: coordinator);
   }
-  
-  @override
-  operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is ProfileRoute && other.userId == userId;
-  }
-  
-  @override
-  int get hashCode => Object.hash(super.hashCode, userId);
 }
 ```
 
@@ -286,7 +273,7 @@ The Coordinator handles all the complexity of URI parsing, route restoration, an
 - Complex nested navigation
 - URL synchronization needed
 
-[→ Learn Coordinator Pattern](doc/paradigms/coordinator.md)
+[→ Learn Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md)
 
 ---
 
@@ -307,31 +294,31 @@ The Coordinator handles all the complexity of URI parsing, route restoration, an
 ## Documentation
 
 ### **📚 Guides**
-- [Getting Started](doc/guides/getting-started.md) - Choose your paradigm and get started
-- [Imperative Navigation](doc/paradigms/imperative.md) - Direct stack control
-- [Declarative Navigation](doc/paradigms/declarative.md) - State-driven routing
-- [Coordinator Pattern](doc/paradigms/coordinator.md) - Deep linking & web support
+- [Getting Started](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/guides/getting-started.md) - Choose your paradigm and get started
+- [Imperative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md) - Direct stack control
+- [Declarative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md) - State-driven routing
+- [Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md) - Deep linking & web support
 
 ### **🔧 API Reference**
-- [Route Mixins](doc/api/mixins.md) - Guards, redirects, transitions, and more
-- [Navigation Paths](doc/api/navigation-paths.md) - Stack containers and navigation
-- [Coordinator API](doc/api/coordinator.md) - Full coordinator reference
-- [Core Classes](doc/api/core-classes.md) - RouteTarget and fundamentals
+- [Route Mixins](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/mixins.md) - Guards, redirects, transitions, and more
+- [Navigation Paths](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md) - Stack containers and navigation
+- [Coordinator API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/coordinator.md) - Full coordinator reference
+- [Core Classes](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/core-classes.md) - RouteTarget and fundamentals
 
 ### **💡 Examples**
-- [Imperative Example](example/lib/main_imperative.dart) - Multi-step form
-- [Declarative Example](example/lib/main_declrative.dart) - State-driven navigation
-- [Coordinator Example](example/lib/main_coordinator.dart) - Deep linking & nested navigation
+- [Imperative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_imperative.dart) - Multi-step form
+- [Declarative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_declrative.dart) - State-driven navigation
+- [Coordinator Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_coordinator.dart) - Deep linking & nested navigation
 
 ---
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See [CONTRIBUTING.md](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Apache 2.0 License - see [LICENSE](LICENSE) for details.
+Apache 2.0 License - see [LICENSE](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/LICENSE) for details.
 
 ## Created With Love By
 
@@ -343,7 +330,7 @@ Apache 2.0 License - see [LICENSE](LICENSE) for details.
 
 **The Ultimate Router for Flutter**
 
-[Documentation](doc/guides/getting-started.md) • [Examples](example/) • [Issues](https://github.com/definev/zenrouter/issues)
+[Documentation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/guides/getting-started.md) • [Examples](https://github.com/definev/zenrouter/tree/main/packages/zenrouter/example) • [Issues](https://github.com/definev/zenrouter/issues)
 
 **Happy Routing! 🧘**
 

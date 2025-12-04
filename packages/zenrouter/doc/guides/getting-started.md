@@ -150,7 +150,7 @@ path.pop();
 path.replace([HomeRoute()]);
 ```
 
-**Next steps:** [Imperative Navigation Guide](../paradigms/imperative.md)
+**Next steps:** [Imperative Navigation Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md)
 
 ---
 
@@ -228,7 +228,7 @@ class PageScreen extends StatelessWidget {
 }
 ```
 
-**Next steps:** [Declarative Navigation Guide](../paradigms/declarative.md)
+**Next steps:** [Declarative Navigation Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md)
 
 ---
 
@@ -330,7 +330,7 @@ Now you have:
 - ✅ Web URLs: Navigate to `/profile` in browser
 - ✅ Browser back button support
 
-**Next steps:** [Coordinator Pattern Guide](../paradigms/coordinator.md)
+**Next steps:** [Coordinator Pattern Guide](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md)
 
 ---
 
@@ -439,20 +439,20 @@ class ProductRoute extends AppRoute with RouteDeepLink {
 ## Documentation
 
 - **Paradigm Guides**
-  - [Imperative Navigation](../paradigms/imperative.md)
-  - [Declarative Navigation](../paradigms/declarative.md)
-  - [Coordinator Pattern](../paradigms/coordinator.md)
+  - [Imperative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md)
+  - [Declarative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/declarative.md)
+  - [Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md)
 
 - **API Reference**
-  - [Core Classes](../api/core-classes.md)
-  - [Navigation Paths](../api/navigation-paths.md)
-  - [Route Mixins](../api/mixins.md)
-  - [Coordinator API](../api/coordinator.md)
+  - [Core Classes](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/core-classes.md)
+  - [Navigation Paths](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md)
+  - [Route Mixins](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/mixins.md)
+  - [Coordinator API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/coordinator.md)
 
 - **Examples**
-  - [Imperative Example](../../example/lib/main_imperative.dart)
-  - [Declarative Example](../../example/lib/main_declrative.dart)
-  - [Coordinator Example](../../example/lib/main_coordinator.dart)
+  - [Imperative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_imperative.dart)
+  - [Declarative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_declrative.dart)
+  - [Coordinator Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_coordinator.dart)
 
 ## Need Help?
 

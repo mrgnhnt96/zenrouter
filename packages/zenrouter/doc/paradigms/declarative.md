@@ -14,8 +14,8 @@ The declarative paradigm lets you define your navigation stack as a function of 
 - You're building tabbed interfaces or filtered lists
 
 ❌ **Don't use declarative navigation when:**
-- Navigation is primarily event-driven (use [Imperative](imperative.md) instead)
-- You need deep linking or web URLs (use [Coordinator](coordinator.md) instead)
+- Navigation is primarily event-driven (use [Imperative](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md) instead)
+- You need deep linking or web URLs (use [Coordinator](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md) instead)
 - You need fine-grained control over push/pop operations
 
 ## Core Concept
@@ -287,7 +287,7 @@ class _PageViewState extends State<PageView> {
 
 For complete API documentation including all methods and parameters, see:
 
-**[→ Navigation Paths API Reference](../api/navigation-paths.md#navigationstackdeclarative)**
+**[→ Navigation Paths API Reference](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#navigationstackdeclarative)**
 
 Quick reference for `NavigationStack.declarative`:
 
@@ -308,7 +308,7 @@ Quick reference for `NavigationStack.declarative`:
 | `.dialog(child)` | Dialog presentation |
 | `.custom(...)` | Custom transition with full control |
 
-See [StackTransition API](../api/navigation-paths.md#stacktransition) for detailed examples.
+See [StackTransition API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#stacktransition) for detailed examples.
 
 
 ## State Patterns
@@ -632,7 +632,7 @@ class AppCoordinator extends Coordinator<AppRoute> {
 
 ## See Also
 
-- [Imperative Navigation](imperative.md) - Direct stack control
-- [Coordinator Pattern](coordinator.md) - Deep linking and web support
-- [Myers Diff Implementation](../api/diff.md) - Algorithm details
-- [DeclarativeNavigationStack API](../api/navigation-paths.md#declarativenavigationstack) - Complete API reference
+- [Imperative Navigation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/imperative.md) - Direct stack control
+- [Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md) - Deep linking and web support
+- [Myers Diff Implementation](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/diff.md) - Algorithm details
+- [DeclarativeNavigationStack API](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/api/navigation-paths.md#declarativenavigationstack) - Complete API reference

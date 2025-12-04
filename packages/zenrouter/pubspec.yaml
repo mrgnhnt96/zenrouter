@@ -1,7 +1,7 @@
 name: zenrouter
-description: "The Flutter router that unifies Navigator 1.0 and 2.0 into one elegant system"
-version: 0.1.1
-homepage: https://github.com/definev/zenrouter/packages/zenrouter
+description: "The Ultimate Flutter Router for Every Navigation Pattern"
+version: 0.1.2
+homepage: https://github.com/definev/zenrouter/tree/main/packages/zenrouter
 
 environment:
   sdk: ^3.8.0

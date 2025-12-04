@@ -137,11 +137,5 @@ class ProductDetailRoute extends AppRoute {
   }
 
   @override
-  bool operator ==(Object other) {
-    if (!compareWith(other)) return false;
-    return other is ProductDetailRoute && other.id == id;
-  }
-
-  @override
-  int get hashCode => Object.hash(super.hashCode, id);
+  List<Object?> get props => [id];
 }
