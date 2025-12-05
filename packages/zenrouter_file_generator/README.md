@@ -2,6 +2,8 @@
 
 A code generator for **file-based routing** in Flutter using [zenrouter](https://pub.dev/packages/zenrouter). Generate type-safe routes from your file/directory structure, similar to Next.js or Nuxt.js.
 
+This package is part of the [ZenRouter](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/README.md) ecosystem and builds on the Coordinator paradigm for deep linking and web support.
+
 ## Features
 
 - 🗂️ **File = Route** - Each file in `routes/` becomes a route automatically
