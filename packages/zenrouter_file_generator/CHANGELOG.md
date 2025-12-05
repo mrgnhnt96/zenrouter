@@ -1,3 +1,3 @@
-## 0.0.1
+## 0.1.0
 
-* TODO: Describe initial release.
+- Initial release of zenrouter_file_generator with file-based routing support for Flutter.

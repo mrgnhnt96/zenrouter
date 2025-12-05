@@ -6,3 +6,5 @@ workspace:
   - packages/zenrouter
   - packages/zenrouter/example
   - packages/zenrouter_devtools
+  - packages/zenrouter_file_generator
+  - packages/zenrouter_file_generator/example

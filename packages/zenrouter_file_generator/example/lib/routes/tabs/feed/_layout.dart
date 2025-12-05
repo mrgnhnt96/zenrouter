@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zenrouter/zenrouter.dart';
 import 'package:zenrouter_file_generator/zenrouter_file_generator.dart';
-import 'package:example/routes/routes.zen.dart';
+import 'package:zenrouter_file_generator_example/routes/routes.zen.dart';
 
 part '_layout.g.dart';
 
