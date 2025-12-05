@@ -17,7 +17,7 @@ ZenRouter is the only router you'll ever need - supporting three distinct paradi
 🔒 **Type-Safe** - Catch routing errors at compile-time, not runtime  
 🛡️ **Powerful Guards & Redirects** - Protect routes and control navigation flow  
 📦 **Zero Boilerplate** - Clean, mixin-based architecture  
-📝 **No Codegen Needed** - Pure Dart, no build_runner or generated files  
+📝 **No Codegen Needed (for core)** - Pure Dart, no build_runner or generated files required. *(Optional file-based routing via `zenrouter_file_generator` is available when you want codegen.)*  
 
 ---
 
@@ -309,6 +309,9 @@ The Coordinator handles all the complexity of URI parsing, route restoration, an
 - [Imperative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_imperative.dart) - Multi-step form
 - [Declarative Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_declrative.dart) - State-driven navigation
 - [Coordinator Example](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/main_coordinator.dart) - Deep linking & nested navigation
+- [File-based Routing Example (Coordinator + generator)](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/example/lib/file_based_routing/README.md) - Next.js-style file-based routing using `zenrouter_file_generator`
+
+To get Next.js / Nuxt.js–style file-based routing on top of the Coordinator paradigm, use the optional [`zenrouter_file_generator`](../zenrouter_file_generator/README.md) package, which provides annotations and a `build_runner`-based code generator.
 
 ---
 

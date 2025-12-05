@@ -18,7 +18,7 @@ ZenRouter is the only router you'll ever need - supporting three distinct paradi
 ⚡ **Blazing Fast** - Efficient Myers diff for optimal performance  
 🔒 **Type-Safe** - Catch routing errors at compile-time  
 🛡️ **Powerful** - Guards, redirects, and custom transitions built-in  
-📝 **No Codegen Needed** - Pure Dart, no build_runner or generated files  
+📝 **No Codegen Needed (for core)** - Pure Dart, no build_runner or generated files required. *(Optional file-based routing via `zenrouter_file_generator` is available when you want codegen.)*  
 
 ---
 
@@ -35,6 +35,7 @@ For complete documentation, API reference, examples, and getting started guides:
 This monorepo contains:
 
 - **[zenrouter](packages/zenrouter/)** - The core routing library
+- **[zenrouter_file_generator](packages/zenrouter_file_generator/)** - File-based routing code generator for ZenRouter's Coordinator paradigm
 - **[zenrouter_devtools](packages/zenrouter_devtools/)** - DevTools for debugging navigation
 
 ---
