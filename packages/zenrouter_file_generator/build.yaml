@@ -1,0 +1,18 @@
+builders:
+  # File-based routing generators - generates _$RouteName base classes
+  zen_route:
+    import: "package:zenrouter_file_generator/builder.dart"
+    builder_factories: ["zenRouteBuilder"]
+    build_extensions: {".dart": [".zen_route.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen|combining_builder"]
+
+  # Coordinator generator - aggregates all routes into routes.zen.dart
+  zen_coordinator:
+    import: "package:zenrouter_file_generator/builder.dart"
+    builder_factories: ["zenCoordinatorBuilder"]
+    build_extensions:
+      "$lib$": ["routes/routes.zen.dart"]
+    auto_apply: dependents
+    build_to: source
