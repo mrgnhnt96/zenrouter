@@ -273,7 +273,7 @@ The Coordinator handles all the complexity of URI parsing, route restoration, an
 - Complex nested navigation
 - URL synchronization needed
 
-[→ Learn Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator.md)
+[→ Learn Coordinator Pattern](https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/paradigms/coordinator/coordinator.md)
 
 ---
 
