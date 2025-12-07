@@ -131,7 +131,7 @@ class FirstTab extends AppRoute {
 
   @override
   Widget build(AppCoordinator coordinator, BuildContext context) {
-    final activeIndex = coordinator.customIndexed.activePathIndex;
+    final activeIndex = coordinator.customIndexed.activeIndex;
     return Scaffold(
       body: Center(
         child: Column(
@@ -199,7 +199,7 @@ class SecondTab extends AppRoute {
 
   @override
   Widget build(AppCoordinator coordinator, BuildContext context) {
-    final activeIndex = coordinator.customIndexed.activePathIndex;
+    final activeIndex = coordinator.customIndexed.activeIndex;
     return Scaffold(
       backgroundColor: Colors.red.shade100,
       body: Center(
@@ -220,7 +220,7 @@ class ThirdTab extends AppRoute {
 
   @override
   Widget build(AppCoordinator coordinator, BuildContext context) {
-    final activeIndex = coordinator.customIndexed.activePathIndex;
+    final activeIndex = coordinator.customIndexed.activeIndex;
     return Scaffold(
       backgroundColor: Colors.blue.shade100,
       body: Center(

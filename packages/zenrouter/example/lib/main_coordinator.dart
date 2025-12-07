@@ -104,17 +104,17 @@ class TabBarLayout extends AppRoute with RouteLayout<AppRoute> {
               children: [
                 _TabButton(
                   label: 'Feed',
-                  isActive: path.activePathIndex == 0,
+                  isActive: path.activeIndex == 0,
                   onTap: () => coordinator.push(FeedTabLayout()),
                 ),
                 _TabButton(
                   label: 'Profile',
-                  isActive: path.activePathIndex == 1,
+                  isActive: path.activeIndex == 1,
                   onTap: () => coordinator.push(ProfileTab()),
                 ),
                 _TabButton(
                   label: 'Settings',
-                  isActive: path.activePathIndex == 2,
+                  isActive: path.activeIndex == 2,
                   onTap: () => coordinator.push(SettingsTab()),
                 ),
               ],

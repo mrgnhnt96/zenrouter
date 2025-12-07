@@ -172,20 +172,24 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
     }
   }
 
-  int _activePathIndex = 0;
+  int _activeIndex = 0;
 
   /// The index of the currently active path in the stack.
-  int get activePathIndex => _activePathIndex;
+  @Deprecated('Use `activeIndex` insteads. This will be removed in 1.0.0')
+  int get activePathIndex => _activeIndex;
+
+  /// The index of the currently active path in the stack.
+  int get activeIndex => _activeIndex;
 
   @override
-  T get activeRoute => stack[activePathIndex];
+  T get activeRoute => stack[activeIndex];
 
   /// Switches the active route to the one at [index].
   ///
   /// Handles guards on the current route and redirects on the new route.
   Future<void> goToIndexed(int index) async {
     if (index >= stack.length) throw StateError('Index out of bounds');
-    final oldIndex = _activePathIndex;
+    final oldIndex = _activeIndex;
     final oldRoute = stack[oldIndex];
     if (oldRoute is RouteGuard) {
       final canPop = await (oldRoute as RouteGuard).popGuard();
@@ -198,7 +202,7 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
       newRoute = redirectTo;
     }
 
-    _activePathIndex = index;
+    _activeIndex = index;
     notifyListeners();
   }
 
@@ -212,7 +216,7 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
 
   @override
   void reset() {
-    _activePathIndex = 0;
+    _activeIndex = 0;
   }
 }
 

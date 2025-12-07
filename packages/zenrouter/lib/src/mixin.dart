@@ -84,7 +84,7 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
       builder: (context, child) {
         final indexedStackPath = path as IndexedStackPath<RouteUnique>;
         return IndexedStack(
-          index: indexedStackPath.activePathIndex,
+          index: indexedStackPath.activeIndex,
           children: indexedStackPath.stack
               .map((ele) => ele.build(coordinator, context))
               .toList(),

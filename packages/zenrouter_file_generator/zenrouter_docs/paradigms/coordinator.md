@@ -563,7 +563,7 @@ mixin RouteUnique on RouteTarget {
   Widget build(Coordinator coordinator, BuildContext context);
   
   // Optional: Layout layout for nested navigation
-  RouteLayout? get layout => null;
+  Type? get layout => null;
 }
 ```
 

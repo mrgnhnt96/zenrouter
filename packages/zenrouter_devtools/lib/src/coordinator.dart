@@ -478,8 +478,7 @@ class _DebugOverlayState<T extends RouteUnique>
                         final (routeIndex, route) = data;
                         final readOnlyPath = path;
                         final isRouteActive =
-                            isActive &&
-                            routeIndex == readOnlyPath.activePathIndex;
+                            isActive && routeIndex == readOnlyPath.activeIndex;
 
                         return InkWell(
                           onTap: () async {

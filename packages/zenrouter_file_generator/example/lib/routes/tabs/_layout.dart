@@ -28,7 +28,7 @@ class TabsLayout extends _$TabsLayout {
       ),
       // User has full control over the navigation UI
       bottomNavigationBar: NavigationBar(
-        selectedIndex: path.activePathIndex,
+        selectedIndex: path.activeIndex,
         onDestinationSelected: (index) => coordinator.push(path.stack[index]),
         destinations: const [
           NavigationDestination(

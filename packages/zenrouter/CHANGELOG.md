@@ -1,3 +1,7 @@
+## 0.2.3
+- Update `activePathIndex` to `activeIndex` in `IndexedStackPath`
+- Update document for detailed, hand-written example of Coordinator pattern
+
 ## 0.2.2
 - Expose pop result in Coordinator
 - **Fix memory leak**: Complete route result futures when routes are removed via `pushOrMoveToTop`
