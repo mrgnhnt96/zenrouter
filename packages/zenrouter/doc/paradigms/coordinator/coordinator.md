@@ -90,7 +90,9 @@ abstract class AppRoute extends RouteTarget with RouteUnique {}
 
 You will extend the `AppRoute` abstract class above to create a new Route in our app.
 
-For example, here is the `Home` and `PostDetail` route. `Home` has no parameters, while `PostDetail` has an `id` parameter. In the `PostDetail` route, you might also want to pass a `Post` object to allow for optimistic loading, so the user doesn't need to wait for a network response.
+For example, here is the `Home` and `PostDetail` route. `Home` has no parameters, while `PostDetail` has an `id` parameter.
+
+> **Important**: When a route has parameters (like `id` in `PostDetail`), you **must** override `props` to include them. ZenRouter uses this for equality checks to prevent duplicate routes and handle updates correctly.
 
 ```dart
 /// file: lib/routes/app_route.dart
