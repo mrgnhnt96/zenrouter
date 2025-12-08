@@ -190,6 +190,11 @@ mixin RouteRedirect<T extends RouteTarget> on RouteTarget {
 abstract class RouteTarget extends Object {
   Completer<Object?> _onResult = Completer();
 
+  @visibleForTesting
+  /// The completer for the result of the route. For testing purposes only.
+  /// DO NOT USE THIS MANUALLY. USE [completeOnResult] instead.
+  Completer<Object?> get onResult => _onResult;
+
   StackPath? _path;
 
   Object? _resultValue;
