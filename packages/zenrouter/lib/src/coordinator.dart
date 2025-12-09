@@ -186,6 +186,9 @@ abstract class Coordinator<T extends RouteUnique> with ChangeNotifier {
     }
   }
 
+  /// Manually recover deep link from route
+  void recover(T route) => recoverRouteFromUri(route.toUri());
+
   /// Wipes the current navigation stack and replaces it with the new route.
   void replace(T route) async {
     for (final path in paths) {

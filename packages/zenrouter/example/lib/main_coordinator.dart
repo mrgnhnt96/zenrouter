@@ -100,25 +100,28 @@ class TabBarLayout extends AppRoute with RouteLayout<AppRoute> {
           // Tab bar
           Container(
             color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _TabButton(
-                  label: 'Feed',
-                  isActive: path.activeIndex == 0,
-                  onTap: () => coordinator.push(FeedTabLayout()),
-                ),
-                _TabButton(
-                  label: 'Profile',
-                  isActive: path.activeIndex == 1,
-                  onTap: () => coordinator.push(ProfileTab()),
-                ),
-                _TabButton(
-                  label: 'Settings',
-                  isActive: path.activeIndex == 2,
-                  onTap: () => coordinator.push(SettingsTab()),
-                ),
-              ],
+            child: ListenableBuilder(
+              listenable: path,
+              builder: (context, child) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _TabButton(
+                    label: 'Feed',
+                    isActive: path.activeIndex == 0,
+                    onTap: () => coordinator.push(FeedTabLayout()),
+                  ),
+                  _TabButton(
+                    label: 'Profile',
+                    isActive: path.activeIndex == 1,
+                    onTap: () => coordinator.push(ProfileTab()),
+                  ),
+                  _TabButton(
+                    label: 'Settings',
+                    isActive: path.activeIndex == 2,
+                    onTap: () => coordinator.push(SettingsTab()),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
