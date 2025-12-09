@@ -153,16 +153,19 @@ class _DebugOverlayState<T extends RouteUnique> extends State<DebugOverlay<T>> {
                   _buildTabBar(),
                   const _Divider(),
                   Expanded(
-                    child:
-                        _selectedTabIndex == 0
-                            ? _PathListView<T>(
-                              coordinator: widget.coordinator,
-                              onShowToast: _showToast,
-                            )
-                            : _DebugRoutesListView<T>(
-                              coordinator: widget.coordinator,
-                              onShowToast: _showToast,
-                            ),
+                    child: switch (_selectedTabIndex) {
+                      0 => _PathListView<T>(
+                        coordinator: widget.coordinator,
+                        onShowToast: _showToast,
+                      ),
+                      1 => _ActiveLayoutsListView<T>(
+                        coordinator: widget.coordinator,
+                      ),
+                      _ => _DebugRoutesListView<T>(
+                        coordinator: widget.coordinator,
+                        onShowToast: _showToast,
+                      ),
+                    },
                   ),
                   const _Divider(),
                   _buildInputArea(),
@@ -236,10 +239,18 @@ class _DebugOverlayState<T extends RouteUnique> extends State<DebugOverlay<T>> {
           const _VerticalDivider(),
           Expanded(
             child: TabButton(
-              label: 'Routes',
-              count: widget.coordinator.problems,
+              label: 'Active',
               isSelected: _selectedTabIndex == 1,
               onTap: () => setState(() => _selectedTabIndex = 1),
+            ),
+          ),
+          const _VerticalDivider(),
+          Expanded(
+            child: TabButton(
+              label: 'Routes',
+              count: widget.coordinator.problems,
+              isSelected: _selectedTabIndex == 2,
+              onTap: () => setState(() => _selectedTabIndex = 2),
             ),
           ),
         ],
@@ -701,7 +712,6 @@ class _ReadOnlyRouteItemState extends State<_ReadOnlyRouteItem> {
                                   ? DebugTheme.textPrimary
                                   : DebugTheme.textSecondary,
                           fontSize: DebugTheme.fontSize,
-                          fontFamily: 'monospace',
                           fontWeight:
                               widget.isRouteActive
                                   ? FontWeight.w600
@@ -804,6 +814,182 @@ class _NavigationRouteItem extends StatelessWidget {
                       }
                       : null,
               color: const Color(0xFFEF9A9A),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// ACTIVE LAYOUTS LIST VIEW
+// =============================================================================
+
+class _ActiveLayoutsListView<T extends RouteUnique> extends StatelessWidget {
+  const _ActiveLayoutsListView({required this.coordinator});
+
+  final CoordinatorDebug<T> coordinator;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: coordinator,
+      builder: (context, _) {
+        final activeLayouts = coordinator.activeLayouts;
+        final activeLayoutPaths = coordinator.activeLayoutPaths;
+
+        if (activeLayouts.isEmpty) {
+          return const Center(
+            child: Text(
+              'No active layouts.\nRoot path is the current active path.',
+              style: TextStyle(
+                color: DebugTheme.textDisabled,
+                fontSize: DebugTheme.fontSizeMd,
+                decoration: TextDecoration.none,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: DebugTheme.spacingXs),
+          itemCount: activeLayouts.length,
+          itemBuilder: (context, index) {
+            final layout = activeLayouts[index];
+            // activeLayoutPaths[0] is root, so layout at index 0 corresponds to path at index 1
+            final path = activeLayoutPaths[index + 1];
+            final isDeepest = index == activeLayouts.length - 1;
+
+            return _ActiveLayoutItem(
+              layout: layout,
+              path: path,
+              depth: index,
+              isDeepest: isDeepest,
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _ActiveLayoutItem extends StatelessWidget {
+  const _ActiveLayoutItem({
+    required this.layout,
+    required this.path,
+    required this.depth,
+    required this.isDeepest,
+  });
+
+  final RouteLayout layout;
+  final StackPath path;
+  final int depth;
+  final bool isDeepest;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: DebugTheme.spacingMd,
+        vertical: DebugTheme.spacing,
+      ),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: DebugTheme.borderDark)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Layout info row
+          Row(
+            children: [
+              // Depth indicator
+              ...List.generate(
+                depth,
+                (_) => Container(
+                  width: 2,
+                  height: 24,
+                  margin: const EdgeInsets.only(right: DebugTheme.spacing),
+                  color: DebugTheme.border,
+                ),
+              ),
+              Icon(
+                isDeepest
+                    ? CupertinoIcons.layers_alt_fill
+                    : CupertinoIcons.layers_alt,
+                color:
+                    isDeepest
+                        ? const Color(0xFF2196F3)
+                        : DebugTheme.textSecondary,
+                size: 16,
+              ),
+              const SizedBox(width: DebugTheme.spacing),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          layout.runtimeType.toString(),
+                          style: TextStyle(
+                            color:
+                                isDeepest
+                                    ? DebugTheme.textPrimary
+                                    : DebugTheme.textSecondary,
+                            fontSize: DebugTheme.fontSizeMd,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        if (isDeepest) ...[
+                          const SizedBox(width: DebugTheme.spacing),
+                          const ActiveBadge(),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Path: ${path.debugLabel ?? path}',
+                      style: const TextStyle(
+                        color: DebugTheme.textMuted,
+                        fontSize: DebugTheme.fontSize,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Active route in this path
+          if (path.activeRoute != null)
+            Padding(
+              padding: EdgeInsets.only(
+                left: (depth * (2 + DebugTheme.spacing)) + 24,
+                top: DebugTheme.spacingSm,
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    CupertinoIcons.arrow_turn_down_right,
+                    color: DebugTheme.textDisabled,
+                    size: 12,
+                  ),
+                  const SizedBox(width: DebugTheme.spacingXs),
+                  Expanded(
+                    child: Text(
+                      path.activeRoute.toString(),
+                      style: const TextStyle(
+                        color: DebugTheme.textSecondary,
+                        fontSize: DebugTheme.fontSize,
+                        decoration: TextDecoration.none,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),

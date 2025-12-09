@@ -86,7 +86,7 @@ class _NavigationStackState<T extends RouteTarget>
           _ => true,
         },
         onPopInvokedWithResult: (didPop, result) async {
-          if (!(kIsWeb || kIsWasm)) {
+          if (!(kIsWeb || kIsWasm) && route._path != null) {
             assert(
               identical(route._path, widget.path),
               'Route must be from the same path',

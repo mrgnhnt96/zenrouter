@@ -125,7 +125,7 @@ abstract class StackPath<T extends RouteTarget> extends ChangeNotifier {
 
   @override
   String toString() =>
-      '${debugLabel ?? hashCode} [${runtimeType.toString().replaceAll('Path', '')}]';
+      '${debugLabel ?? hashCode} [${runtimeType.toString().split('Path').first}]';
 }
 
 /// A mutable stack path for standard navigation.

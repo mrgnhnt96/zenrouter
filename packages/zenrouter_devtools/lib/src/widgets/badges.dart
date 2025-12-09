@@ -50,7 +50,7 @@ class StatefulBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(DebugTheme.radiusSm),
       ),
       child: const Text(
-        'STATEFUL',
+        'FIXED',
         style: TextStyle(
           color: Color(0xFFFF9800),
           fontSize: DebugTheme.fontSizeXs,
