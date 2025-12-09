@@ -73,6 +73,8 @@ class _NavigationStackState<T extends RouteTarget>
   }
 
   Page _buildPage(T route) {
+    /// Set path to route
+    route._path = widget.path;
     final destination = widget.resolver(route);
     return destination.pageBuilder(
       context,
@@ -84,13 +86,26 @@ class _NavigationStackState<T extends RouteTarget>
           _ => true,
         },
         onPopInvokedWithResult: (didPop, result) async {
+          if (!(kIsWeb || kIsWasm)) {
+            assert(
+              identical(route._path, widget.path),
+              'Route must be from the same path',
+            );
+          }
+
           switch (didPop) {
             case true when result != null:
               route.onDidPop(result, widget.coordinator);
               route.completeOnResult(result, widget.coordinator);
             case true:
               route.onDidPop(result, widget.coordinator);
-              route.completeOnResult(route._resultValue, widget.coordinator);
+              route.completeOnResult(
+                route._resultValue,
+                widget.coordinator,
+
+                /// Fail silent if it's force pop from platform
+                route.isPopByPath == false,
+              );
             case false when route is RouteGuard:
               widget.path.pop();
             case false when destination.guard != null:
