@@ -64,8 +64,9 @@ class HomeLayout extends AppRoute with RouteLayout<AppRoute>, RouteTransition {
   StackTransition<T> transition<T extends RouteUnique>(
     AppCoordinator coordinator,
   ) {
-    final context = coordinator.navigator.context;
-    return StackTransition.cupertino(build(coordinator, context));
+    return StackTransition.cupertino(
+      Builder(builder: (context) => build(coordinator, context)),
+    );
   }
 }
 
