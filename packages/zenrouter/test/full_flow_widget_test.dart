@@ -471,6 +471,218 @@ class TestCoordinator extends Coordinator<AppRoute> {
 // ============================================================================
 
 void main() {
+  group('Full Flow Widget Tests - Coordinator', () {
+    group('Basic Information', () {
+      test('activeLayout returns null when no layout is active', () async {
+        final coordinator = TestCoordinator();
+        await coordinator.replace(HomeRoute());
+
+        expect(coordinator.activeLayout, isNull);
+      });
+
+      test('activeLayout returns the deepest active layout', () async {
+        final coordinator = TestCoordinator();
+
+        // Push a route with ShellRoute layout
+        await coordinator.replace(ShellChildRoute(id: 'test'));
+
+        final activeLayout = coordinator.activeLayout;
+        expect(activeLayout, isNotNull);
+        expect(activeLayout, isA<ShellRoute>());
+      });
+
+      test('activeLayout returns deepest layout in nested hierarchy', () async {
+        final coordinator = TestCoordinator();
+
+        // Push a route with ProfileLayout
+        await coordinator.replace(ProfileChildRoute(section: 'edit'));
+
+        final activeLayout = coordinator.activeLayout;
+        expect(activeLayout, isNotNull);
+        expect(activeLayout, isA<ProfileLayout>());
+      });
+
+      test('activeLayouts returns all active layouts in hierarchy', () async {
+        final coordinator = TestCoordinator();
+
+        // Simple route - no layouts
+        await coordinator.replace(HomeRoute());
+        expect(coordinator.activeLayouts, isEmpty);
+
+        // Route with one layout
+        await coordinator.replace(ShellChildRoute(id: 'test'));
+        expect(coordinator.activeLayouts.length, 1);
+        expect(coordinator.activeLayouts.first, isA<ShellRoute>());
+
+        // Route with layout
+        await coordinator.replace(ProfileChildRoute(section: 'settings'));
+        expect(coordinator.activeLayouts.length, 1);
+        expect(coordinator.activeLayouts.first, isA<ProfileLayout>());
+      });
+
+      test('activePath returns root when no layouts are active', () async {
+        final coordinator = TestCoordinator();
+        await coordinator.replace(HomeRoute());
+
+        expect(coordinator.activePath, coordinator.root);
+      });
+
+      test('activePath returns the deepest active path', () async {
+        final coordinator = TestCoordinator();
+
+        // Push shell child route
+        await coordinator.replace(ShellChildRoute(id: 'test'));
+
+        expect(coordinator.activePath, coordinator.shellStack);
+      });
+
+      test('activeLayoutPaths returns correct path hierarchy', () async {
+        final coordinator = TestCoordinator();
+
+        // Simple route - only root
+        await coordinator.replace(HomeRoute());
+        expect(coordinator.activeLayoutPaths.length, 1);
+        expect(coordinator.activeLayoutPaths.first, coordinator.root);
+
+        // Route with shell layout
+        await coordinator.replace(ShellChildRoute(id: 'test'));
+        expect(coordinator.activeLayoutPaths.length, 2);
+        expect(coordinator.activeLayoutPaths[0], coordinator.root);
+        expect(coordinator.activeLayoutPaths[1], coordinator.shellStack);
+      });
+
+      test('currentUri returns correct URI for active route', () async {
+        final coordinator = TestCoordinator();
+
+        await coordinator.replace(HomeRoute());
+        expect(coordinator.currentUri.toString(), '/');
+
+        await coordinator.replace(ProfileRoute(userId: '123'));
+        expect(coordinator.currentUri.toString(), '/profile/123');
+
+        await coordinator.replace(SettingsRoute());
+        expect(coordinator.currentUri.toString(), '/settings');
+      });
+    });
+
+    group('Recover Method', () {
+      testWidgets('recover with push strategy pushes route onto stack', (
+        tester,
+      ) async {
+        final coordinator = TestCoordinator();
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator.routerDelegate,
+            routeInformationParser: coordinator.routeInformationParser,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Navigate to create initial stack
+        coordinator.push(SettingsRoute());
+        await tester.pumpAndSettle();
+
+        final stackLengthBefore = coordinator.root.stack.length;
+
+        // Recover with push strategy
+        coordinator.recover(
+          DeepLinkRoute(path: 'user1', strategy: DeeplinkStrategy.push),
+        );
+        await tester.pumpAndSettle();
+
+        // Should push onto existing stack
+        expect(coordinator.root.stack.length, stackLengthBefore + 1);
+        expect(find.byKey(const ValueKey('deeplink-user1')), findsOneWidget);
+      });
+
+      testWidgets('recover with replace strategy replaces entire stack', (
+        tester,
+      ) async {
+        final coordinator = TestCoordinator();
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator.routerDelegate,
+            routeInformationParser: coordinator.routeInformationParser,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Navigate to create initial stack
+        coordinator.push(SettingsRoute());
+        coordinator.push(ProfileRoute(userId: '456'));
+        await tester.pumpAndSettle();
+
+        expect(coordinator.root.stack.length, 3); // Home + Settings + Profile
+
+        // Recover with replace strategy
+        await coordinator.recover(
+          DeepLinkRoute(path: 'user2', strategy: DeeplinkStrategy.replace),
+        );
+        await tester.pumpAndSettle();
+
+        // Should replace entire stack
+        expect(coordinator.root.stack.length, 1);
+        expect(find.byKey(const ValueKey('deeplink-user2')), findsOneWidget);
+      });
+
+      testWidgets('recover with custom strategy invokes custom handler', (
+        tester,
+      ) async {
+        final coordinator = TestCoordinator();
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator.routerDelegate,
+            routeInformationParser: coordinator.routeInformationParser,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Recover with custom strategy
+        await coordinator.recover(
+          DeepLinkRoute(path: 'customUser', strategy: DeeplinkStrategy.custom),
+        );
+        await tester.pumpAndSettle();
+
+        // Custom handler should navigate to profile with the path as userId
+        expect(
+          find.byKey(const ValueKey('profile-customUser')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('recover with non-deeplink route uses replace', (
+        tester,
+      ) async {
+        final coordinator = TestCoordinator();
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator.routerDelegate,
+            routeInformationParser: coordinator.routeInformationParser,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Navigate to create initial stack
+        coordinator.push(SettingsRoute());
+        coordinator.push(ProfileRoute(userId: '789'));
+        await tester.pumpAndSettle();
+
+        expect(coordinator.root.stack.length, 3);
+
+        // Recover with non-deeplink route
+        await coordinator.recover(HomeRoute());
+        await tester.pumpAndSettle();
+
+        // Should replace stack (default behavior)
+        expect(coordinator.root.stack.length, 1);
+        expect(find.byKey(const ValueKey('home')), findsOneWidget);
+      });
+    });
+  });
   group('Full Flow Widget Tests - Basic Navigation', () {
     testWidgets('Home screen renders correctly', (tester) async {
       final coordinator = TestCoordinator();
