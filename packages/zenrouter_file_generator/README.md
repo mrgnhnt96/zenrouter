@@ -17,6 +17,7 @@ This package is part of the [ZenRouter](https://github.com/definev/zenrouter/blo
 - 🎯 **Type-safe navigation** - Generated extension methods for type-safe navigation
 - 📱 **Full ZenRouter support** - Deep linking, guards, redirects, transitions, and more
 - 🚀 **Zero boilerplate** - Routes are generated from your file structure
+- 🕸️ **Lazy loading** - Routes can be lazy loaded using the `deferredImport` option in the `@ZenCoordinator` annotation. Improves app startup time and reduces initial bundle size.
 
 ## Installation
 
@@ -25,11 +26,11 @@ Add `zenrouter_file_generator`, `zenrouter_file_annotation` and `zenrouter` to y
 ```yaml
 dependencies:
   zenrouter: ^0.3.0
-  zenrouter_file_annotation: ^0.3.0
+  zenrouter_file_annotation: ^0.3.1
 
 dev_dependencies:
   build_runner: ^2.10.4
-  zenrouter_file_generator: ^0.3.0
+  zenrouter_file_generator: ^0.3.1
 ```
 
 ## Quick Start
