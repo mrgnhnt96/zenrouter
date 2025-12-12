@@ -4,25 +4,25 @@
 import 'package:zenrouter/zenrouter.dart';
 
 import '(auth)/_layout.dart';
-import '(auth)/login.dart' deferred as _auth__login;
-import '(auth)/register.dart' deferred as _auth__register;
+import '(auth)/login.dart' deferred as _auth_login;
+import '(auth)/register.dart' deferred as _auth_register;
 import 'about.dart' deferred as about;
 import 'index.dart' deferred as index;
 import 'not_found.dart';
 import 'profile/[profileId]/collections/[collectionId].dart'
-    deferred as profile_profileId_collections_collectionId;
-import 'profile/[profileId]/index.dart' deferred as profile_profileId_index;
+    deferred as profile__profileId_collections__collectionId;
+import 'profile/[profileId]/index.dart' deferred as profile__profileId_index;
 import 'profile/general.dart' deferred as profile_general;
 import 'tabs/_layout.dart';
 import 'tabs/feed/_layout.dart';
 import 'tabs/feed/following/[...slugs]/[id].dart'
-    deferred as tabs_feed_following__slugs_id;
+    deferred as tabs_feed_following___slugs__id;
 import 'tabs/feed/following/[...slugs]/about.dart'
-    deferred as tabs_feed_following__slugs_about;
+    deferred as tabs_feed_following___slugs_about;
 import 'tabs/feed/following/[...slugs]/index.dart'
-    deferred as tabs_feed_following__slugs_index;
+    deferred as tabs_feed_following___slugs_index;
 import 'tabs/feed/following/[postId].dart'
-    deferred as tabs_feed_following_postId;
+    deferred as tabs_feed_following__postId;
 import 'tabs/feed/following/_layout.dart';
 import 'tabs/feed/following/index.dart' deferred as tabs_feed_following_index;
 import 'tabs/feed/for-you/_layout.dart';
@@ -90,8 +90,8 @@ class AppCoordinator extends Coordinator<AppRoute> {
         return tabs_feed_foryou_sheet.ForYouSheetRoute();
       }(),
       ['tabs', 'feed', 'following', final postId] => await () async {
-        await tabs_feed_following_postId.loadLibrary();
-        return tabs_feed_following_postId.FeedPostRoute(postId: postId);
+        await tabs_feed_following__postId.loadLibrary();
+        return tabs_feed_following__postId.FeedPostRoute(postId: postId);
       }(),
       ['tabs', 'feed', 'following'] => await () async {
         await tabs_feed_following_index.loadLibrary();
@@ -103,8 +103,8 @@ class AppCoordinator extends Coordinator<AppRoute> {
       }(),
       ['profile', final profileId, 'collections', final collectionId] =>
         await () async {
-          await profile_profileId_collections_collectionId.loadLibrary();
-          return profile_profileId_collections_collectionId.CollectionsCollectionIdRoute(
+          await profile__profileId_collections__collectionId.loadLibrary();
+          return profile__profileId_collections__collectionId.CollectionsCollectionIdRoute(
             profileId: profileId,
             collectionId: collectionId,
             queries: uri.queryParameters,
@@ -117,38 +117,38 @@ class AppCoordinator extends Coordinator<AppRoute> {
       ['tabs', 'profile'] => TabProfileRoute(),
       ['tabs', 'settings'] => TabSettingsRoute(),
       ['profile', final profileId] => await () async {
-        await profile_profileId_index.loadLibrary();
-        return profile_profileId_index.ProfileIdRoute(profileId: profileId);
+        await profile__profileId_index.loadLibrary();
+        return profile__profileId_index.ProfileIdRoute(profileId: profileId);
       }(),
       ['login'] => await () async {
-        await _auth__login.loadLibrary();
-        return _auth__login.LoginRoute();
+        await _auth_login.loadLibrary();
+        return _auth_login.LoginRoute();
       }(),
       ['register'] => await () async {
-        await _auth__register.loadLibrary();
-        return _auth__register.RegisterRoute();
+        await _auth_register.loadLibrary();
+        return _auth_register.RegisterRoute();
       }(),
       ['about'] => await () async {
         await about.loadLibrary();
         return about.AboutRoute();
       }(),
       ['tabs', 'feed', 'following', ...final slugs, 'about'] => await () async {
-        await tabs_feed_following__slugs_about.loadLibrary();
-        return tabs_feed_following__slugs_about.FeedDynamicAboutRoute(
+        await tabs_feed_following___slugs_about.loadLibrary();
+        return tabs_feed_following___slugs_about.FeedDynamicAboutRoute(
           slugs: slugs,
         );
       }(),
       ['tabs', 'feed', 'following', ...final slugs, final id] =>
         await () async {
-          await tabs_feed_following__slugs_id.loadLibrary();
-          return tabs_feed_following__slugs_id.FeedDynamicIdRoute(
+          await tabs_feed_following___slugs__id.loadLibrary();
+          return tabs_feed_following___slugs__id.FeedDynamicIdRoute(
             slugs: slugs,
             id: id,
           );
         }(),
       ['tabs', 'feed', 'following', ...final slugs] => await () async {
-        await tabs_feed_following__slugs_index.loadLibrary();
-        return tabs_feed_following__slugs_index.FeedDynamicRoute(slugs: slugs);
+        await tabs_feed_following___slugs_index.loadLibrary();
+        return tabs_feed_following___slugs_index.FeedDynamicRoute(slugs: slugs);
       }(),
       _ => NotFoundRoute(uri: uri, queries: uri.queryParameters),
     };
@@ -158,28 +158,28 @@ class AppCoordinator extends Coordinator<AppRoute> {
 /// Type-safe navigation extension methods.
 extension AppCoordinatorNav on AppCoordinator {
   Future<T?> pushLogin<T extends Object>() async => push(await () async {
-    await _auth__login.loadLibrary();
-    return _auth__login.LoginRoute();
+    await _auth_login.loadLibrary();
+    return _auth_login.LoginRoute();
   }());
   Future<void> replaceLogin() async => replace(await () async {
-    await _auth__login.loadLibrary();
-    return _auth__login.LoginRoute();
+    await _auth_login.loadLibrary();
+    return _auth_login.LoginRoute();
   }());
   Future<void> recoverLogin() async => recover(await () async {
-    await _auth__login.loadLibrary();
-    return _auth__login.LoginRoute();
+    await _auth_login.loadLibrary();
+    return _auth_login.LoginRoute();
   }());
   Future<T?> pushRegister<T extends Object>() async => push(await () async {
-    await _auth__register.loadLibrary();
-    return _auth__register.RegisterRoute();
+    await _auth_register.loadLibrary();
+    return _auth_register.RegisterRoute();
   }());
   Future<void> replaceRegister() async => replace(await () async {
-    await _auth__register.loadLibrary();
-    return _auth__register.RegisterRoute();
+    await _auth_register.loadLibrary();
+    return _auth_register.RegisterRoute();
   }());
   Future<void> recoverRegister() async => recover(await () async {
-    await _auth__register.loadLibrary();
-    return _auth__register.RegisterRoute();
+    await _auth_register.loadLibrary();
+    return _auth_register.RegisterRoute();
   }());
   Future<T?> pushAbout<T extends Object>() async => push(await () async {
     await about.loadLibrary();
@@ -210,8 +210,8 @@ extension AppCoordinatorNav on AppCoordinator {
     String collectionId, [
     Map<String, String> queries = const {},
   ]) async => push(await () async {
-    await profile_profileId_collections_collectionId.loadLibrary();
-    return profile_profileId_collections_collectionId.CollectionsCollectionIdRoute(
+    await profile__profileId_collections__collectionId.loadLibrary();
+    return profile__profileId_collections__collectionId.CollectionsCollectionIdRoute(
       profileId: profileId,
       collectionId: collectionId,
       queries: queries,
@@ -222,8 +222,8 @@ extension AppCoordinatorNav on AppCoordinator {
     String collectionId, [
     Map<String, String> queries = const {},
   ]) async => replace(await () async {
-    await profile_profileId_collections_collectionId.loadLibrary();
-    return profile_profileId_collections_collectionId.CollectionsCollectionIdRoute(
+    await profile__profileId_collections__collectionId.loadLibrary();
+    return profile__profileId_collections__collectionId.CollectionsCollectionIdRoute(
       profileId: profileId,
       collectionId: collectionId,
       queries: queries,
@@ -234,8 +234,8 @@ extension AppCoordinatorNav on AppCoordinator {
     String collectionId, [
     Map<String, String> queries = const {},
   ]) async => recover(await () async {
-    await profile_profileId_collections_collectionId.loadLibrary();
-    return profile_profileId_collections_collectionId.CollectionsCollectionIdRoute(
+    await profile__profileId_collections__collectionId.loadLibrary();
+    return profile__profileId_collections__collectionId.CollectionsCollectionIdRoute(
       profileId: profileId,
       collectionId: collectionId,
       queries: queries,
@@ -243,18 +243,18 @@ extension AppCoordinatorNav on AppCoordinator {
   }());
   Future<T?> pushProfileId<T extends Object>(String profileId) async =>
       push(await () async {
-        await profile_profileId_index.loadLibrary();
-        return profile_profileId_index.ProfileIdRoute(profileId: profileId);
+        await profile__profileId_index.loadLibrary();
+        return profile__profileId_index.ProfileIdRoute(profileId: profileId);
       }());
   Future<void> replaceProfileId(String profileId) async =>
       replace(await () async {
-        await profile_profileId_index.loadLibrary();
-        return profile_profileId_index.ProfileIdRoute(profileId: profileId);
+        await profile__profileId_index.loadLibrary();
+        return profile__profileId_index.ProfileIdRoute(profileId: profileId);
       }());
   Future<void> recoverProfileId(String profileId) async =>
       recover(await () async {
-        await profile_profileId_index.loadLibrary();
-        return profile_profileId_index.ProfileIdRoute(profileId: profileId);
+        await profile__profileId_index.loadLibrary();
+        return profile__profileId_index.ProfileIdRoute(profileId: profileId);
       }());
   Future<T?> pushProfileGeneral<T extends Object>() async =>
       push(await () async {
@@ -273,76 +273,76 @@ extension AppCoordinatorNav on AppCoordinator {
     List<String> slugs,
     String id,
   ) async => push(await () async {
-    await tabs_feed_following__slugs_id.loadLibrary();
-    return tabs_feed_following__slugs_id.FeedDynamicIdRoute(
+    await tabs_feed_following___slugs__id.loadLibrary();
+    return tabs_feed_following___slugs__id.FeedDynamicIdRoute(
       slugs: slugs,
       id: id,
     );
   }());
   Future<void> replaceFeedDynamicId(List<String> slugs, String id) async =>
       replace(await () async {
-        await tabs_feed_following__slugs_id.loadLibrary();
-        return tabs_feed_following__slugs_id.FeedDynamicIdRoute(
+        await tabs_feed_following___slugs__id.loadLibrary();
+        return tabs_feed_following___slugs__id.FeedDynamicIdRoute(
           slugs: slugs,
           id: id,
         );
       }());
   Future<void> recoverFeedDynamicId(List<String> slugs, String id) async =>
       recover(await () async {
-        await tabs_feed_following__slugs_id.loadLibrary();
-        return tabs_feed_following__slugs_id.FeedDynamicIdRoute(
+        await tabs_feed_following___slugs__id.loadLibrary();
+        return tabs_feed_following___slugs__id.FeedDynamicIdRoute(
           slugs: slugs,
           id: id,
         );
       }());
   Future<T?> pushFeedDynamicAbout<T extends Object>(List<String> slugs) async =>
       push(await () async {
-        await tabs_feed_following__slugs_about.loadLibrary();
-        return tabs_feed_following__slugs_about.FeedDynamicAboutRoute(
+        await tabs_feed_following___slugs_about.loadLibrary();
+        return tabs_feed_following___slugs_about.FeedDynamicAboutRoute(
           slugs: slugs,
         );
       }());
   Future<void> replaceFeedDynamicAbout(List<String> slugs) async =>
       replace(await () async {
-        await tabs_feed_following__slugs_about.loadLibrary();
-        return tabs_feed_following__slugs_about.FeedDynamicAboutRoute(
+        await tabs_feed_following___slugs_about.loadLibrary();
+        return tabs_feed_following___slugs_about.FeedDynamicAboutRoute(
           slugs: slugs,
         );
       }());
   Future<void> recoverFeedDynamicAbout(List<String> slugs) async =>
       recover(await () async {
-        await tabs_feed_following__slugs_about.loadLibrary();
-        return tabs_feed_following__slugs_about.FeedDynamicAboutRoute(
+        await tabs_feed_following___slugs_about.loadLibrary();
+        return tabs_feed_following___slugs_about.FeedDynamicAboutRoute(
           slugs: slugs,
         );
       }());
   Future<T?> pushFeedDynamic<T extends Object>(List<String> slugs) async =>
       push(await () async {
-        await tabs_feed_following__slugs_index.loadLibrary();
-        return tabs_feed_following__slugs_index.FeedDynamicRoute(slugs: slugs);
+        await tabs_feed_following___slugs_index.loadLibrary();
+        return tabs_feed_following___slugs_index.FeedDynamicRoute(slugs: slugs);
       }());
   Future<void> replaceFeedDynamic(List<String> slugs) async =>
       replace(await () async {
-        await tabs_feed_following__slugs_index.loadLibrary();
-        return tabs_feed_following__slugs_index.FeedDynamicRoute(slugs: slugs);
+        await tabs_feed_following___slugs_index.loadLibrary();
+        return tabs_feed_following___slugs_index.FeedDynamicRoute(slugs: slugs);
       }());
   Future<void> recoverFeedDynamic(List<String> slugs) async =>
       recover(await () async {
-        await tabs_feed_following__slugs_index.loadLibrary();
-        return tabs_feed_following__slugs_index.FeedDynamicRoute(slugs: slugs);
+        await tabs_feed_following___slugs_index.loadLibrary();
+        return tabs_feed_following___slugs_index.FeedDynamicRoute(slugs: slugs);
       }());
   Future<T?> pushFeedPost<T extends Object>(String postId) async =>
       push(await () async {
-        await tabs_feed_following_postId.loadLibrary();
-        return tabs_feed_following_postId.FeedPostRoute(postId: postId);
+        await tabs_feed_following__postId.loadLibrary();
+        return tabs_feed_following__postId.FeedPostRoute(postId: postId);
       }());
   Future<void> replaceFeedPost(String postId) async => replace(await () async {
-    await tabs_feed_following_postId.loadLibrary();
-    return tabs_feed_following_postId.FeedPostRoute(postId: postId);
+    await tabs_feed_following__postId.loadLibrary();
+    return tabs_feed_following__postId.FeedPostRoute(postId: postId);
   }());
   Future<void> recoverFeedPost(String postId) async => recover(await () async {
-    await tabs_feed_following_postId.loadLibrary();
-    return tabs_feed_following_postId.FeedPostRoute(postId: postId);
+    await tabs_feed_following__postId.loadLibrary();
+    return tabs_feed_following__postId.FeedPostRoute(postId: postId);
   }());
   Future<T?> pushFollowing<T extends Object>() async => push(await () async {
     await tabs_feed_following_index.loadLibrary();

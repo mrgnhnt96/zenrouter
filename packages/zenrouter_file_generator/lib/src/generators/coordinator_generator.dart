@@ -1,4 +1,6 @@
+import 'package:analyzer/dart/element/element2.dart';
 import 'package:build/build.dart';
+import 'package:dart_style/dart_style.dart';
 import 'package:glob/glob.dart';
 
 import 'package:zenrouter_file_annotation/zenrouter_file_annotation.dart';
@@ -20,6 +22,17 @@ class CoordinatorGenerator implements Builder {
 
   CoordinatorGenerator({this.globalDeferredImport = false});
 
+  // Cached regex patterns for performance
+  static final _annotationRegex = RegExp(r'@ZenCoordinator\s*\(([^)]+)\)');
+  static final _nameMatchSingleQuote = RegExp(r"name:\s*'([^']+)'");
+  static final _nameMatchDoubleQuote = RegExp(r'name:\s*"([^"]+)"');
+  static final _routeBaseMatchSingleQuote = RegExp(r"routeBase:\s*'([^']+)'");
+  static final _routeBaseMatchDoubleQuote = RegExp(r'routeBase:\s*"([^"]+)"');
+  static final _classMatchRoute = RegExp(r'class\s+(\w+Route)\s+extends');
+  static final _classMatchLayout = RegExp(r'class\s+(\w+Layout)\s+extends');
+  static final _queriesMatch = RegExp(r'queries:\s*\[([^\]]+)\]');
+  static final _queriesContentMatch = RegExp(r"'([^']+)'");
+
   @override
   final buildExtensions = const {
     r'$lib$': ['routes/routes.zen.dart'],
@@ -38,7 +51,7 @@ class CoordinatorGenerator implements Builder {
     String coordinatorName = 'AppCoordinator';
     String routeBaseName = 'AppRoute';
 
-    // First pass: Find coordinator configuration
+    // Single pass: Process all files at once (performance optimization)
     final routeFiles = Glob('lib/routes/**.dart');
     await for (final input in buildStep.findAssets(routeFiles)) {
       if (input.path.contains('.g.dart')) continue;
@@ -46,10 +59,10 @@ class CoordinatorGenerator implements Builder {
 
       final relativePath = input.path.replaceFirst('lib/routes/', '');
       final fileName = relativePath.split('/').last;
+      final content = await buildStep.readAsString(input);
 
       // Check for @ZenCoordinator annotation
       if (fileName == '_coordinator.dart') {
-        final content = await buildStep.readAsString(input);
         if (content.contains('@ZenCoordinator')) {
           final config = _parseCoordinatorConfig(content);
           if (config != null) {
@@ -57,21 +70,6 @@ class CoordinatorGenerator implements Builder {
             routeBaseName = config['routeBase'] ?? routeBaseName;
           }
         }
-      }
-    }
-
-    // Second pass: Process routes and layouts
-    await for (final input in buildStep.findAssets(routeFiles)) {
-      if (input.path.contains('.g.dart')) continue;
-      if (input.path.contains('.zen.dart')) continue;
-
-      // Collect all file paths for importing
-      final relativePath = input.path.replaceFirst('lib/routes/', '');
-      final fileName = relativePath.split('/').last;
-      final content = await buildStep.readAsString(input);
-
-      // Skip coordinator config file (already processed)
-      if (fileName == '_coordinator.dart') {
         continue;
       }
 
@@ -84,7 +82,6 @@ class CoordinatorGenerator implements Builder {
       }
 
       // Parse route info from file content and path
-      // input.path should preserve hyphens - if not, we may need to use uri
       final info = _parseRouteInfo(input.path, content);
       if (info != null) {
         if (info is RouteInfo) {
@@ -147,12 +144,48 @@ class CoordinatorGenerator implements Builder {
       routeFileMap,
     );
 
+    // Get language version for formatting
+    // Try to resolve from _coordinator.dart, otherwise use latest
+    LibraryElement? lib;
+    try {
+      final coordinatorId = AssetId(
+        buildStep.inputId.package,
+        'lib/routes/_coordinator.dart',
+      );
+      if (await buildStep.canRead(coordinatorId)) {
+        lib = await buildStep.resolver.libraryFor(
+          coordinatorId,
+          allowSyntaxErrors: true,
+        );
+      }
+    } catch (_) {
+      // Ignore errors, will use latest language version
+    }
+
+    // Format the generated code
+    final formattedOutput = _formatOutput(lib, output);
+
     // Write output - path is relative to lib/ since we use $lib$ trigger
     final outputId = AssetId(
       buildStep.inputId.package,
       'lib/routes/routes.zen.dart',
     );
-    await buildStep.writeAsString(outputId, output);
+    await buildStep.writeAsString(outputId, formattedOutput);
+  }
+
+  /// Format the generated Dart code using dart_style.
+  String _formatOutput(LibraryElement? library, String code) {
+    try {
+      final languageVersion =
+          library?.languageVersion.effective ??
+          DartFormatter.latestLanguageVersion;
+      final formatter = DartFormatter(languageVersion: languageVersion);
+      return formatter.format(code);
+    } catch (e) {
+      // If formatting fails, return the unformatted code
+      // This ensures generation doesn't fail due to formatting issues
+      return code;
+    }
   }
 
   /// Parse @ZenCoordinator annotation from _coordinator.dart file.
@@ -164,9 +197,7 @@ class CoordinatorGenerator implements Builder {
     }
 
     // Extract annotation parameters
-    final annotationMatch = RegExp(
-      r'@ZenCoordinator\s*\(([^)]+)\)',
-    ).firstMatch(content);
+    final annotationMatch = _annotationRegex.firstMatch(content);
 
     if (annotationMatch == null) {
       // Use defaults if annotation exists but has no parameters
@@ -177,8 +208,8 @@ class CoordinatorGenerator implements Builder {
     final config = <String, String>{};
 
     // Parse name parameter - supports both single and double quotes
-    final nameMatchSingle = RegExp(r"name:\s*'([^']+)'").firstMatch(params);
-    final nameMatchDouble = RegExp(r'name:\s*"([^"]+)"').firstMatch(params);
+    final nameMatchSingle = _nameMatchSingleQuote.firstMatch(params);
+    final nameMatchDouble = _nameMatchDoubleQuote.firstMatch(params);
     if (nameMatchSingle != null) {
       config['name'] = nameMatchSingle.group(1)!;
     } else if (nameMatchDouble != null) {
@@ -186,12 +217,8 @@ class CoordinatorGenerator implements Builder {
     }
 
     // Parse routeBase parameter - supports both single and double quotes
-    final routeBaseMatchSingle = RegExp(
-      r"routeBase:\s*'([^']+)'",
-    ).firstMatch(params);
-    final routeBaseMatchDouble = RegExp(
-      r'routeBase:\s*"([^"]+)"',
-    ).firstMatch(params);
+    final routeBaseMatchSingle = _routeBaseMatchSingleQuote.firstMatch(params);
+    final routeBaseMatchDouble = _routeBaseMatchDoubleQuote.firstMatch(params);
     if (routeBaseMatchSingle != null) {
       config['routeBase'] = routeBaseMatchSingle.group(1)!;
     } else if (routeBaseMatchDouble != null) {
@@ -226,9 +253,7 @@ class CoordinatorGenerator implements Builder {
 
   RouteInfo? _parseRouteFromContent(String relativePath, String content) {
     // Extract class name
-    final classMatch = RegExp(
-      r'class\s+(\w+Route)\s+extends',
-    ).firstMatch(content);
+    final classMatch = _classMatchRoute.firstMatch(content);
     if (classMatch == null) return null;
 
     final className = classMatch.group(1)!;
@@ -267,13 +292,14 @@ class CoordinatorGenerator implements Builder {
 
     // Parse query parameter names from annotation
     List<String>? queries;
-    final queriesMatch = RegExp(r'queries:\s*\[([^\]]+)\]').firstMatch(content);
+    final queriesMatch = _queriesMatch.firstMatch(content);
     if (queriesMatch != null) {
       final queriesList = queriesMatch.group(1)!;
       queries =
-          RegExp(
-            r"'([^']+)'",
-          ).allMatches(queriesList).map((m) => m.group(1)!).toList();
+          _queriesContentMatch
+              .allMatches(queriesList)
+              .map((m) => m.group(1)!)
+              .toList();
     }
 
     return RouteInfo(
@@ -293,9 +319,7 @@ class CoordinatorGenerator implements Builder {
 
   LayoutInfo? _parseLayoutFromContent(String relativePath, String content) {
     // Extract class name
-    final classMatch = RegExp(
-      r'class\s+(\w+Layout)\s+extends',
-    ).firstMatch(content);
+    final classMatch = _classMatchLayout.firstMatch(content);
     if (classMatch == null) return null;
 
     final className = classMatch.group(1)!;
@@ -452,15 +476,36 @@ class CoordinatorGenerator implements Builder {
   }
 
   String _getAliasImport(String path) {
-    return path
-        .replaceAll('...', '_')
-        .replaceAll('/[', '_')
-        .replaceAll('/', '_')
-        .replaceAll(']', '')
-        .replaceAll('-', '')
-        .replaceAll('(', '_')
-        .replaceAll(')', '_')
-        .replaceFirst('.dart', '');
+    // Performance optimization: single-pass character iteration instead of 7 replaceAll calls
+    final buffer = StringBuffer();
+    for (var i = 0; i < path.length; i++) {
+      final char = path[i];
+      switch (char) {
+        case '.':
+          if (i + 2 < path.length && path.substring(i, i + 3) == '...') {
+            buffer.write('_');
+            i += 2; // Skip the next two dots
+          } else if (i + 4 < path.length &&
+              path.substring(i, i + 5) == '.dart') {
+            // Skip .dart extension at end
+            i += 4;
+          } else {
+            buffer.write(char);
+          }
+        case '/':
+        case '[':
+        case '(':
+          buffer.write('_');
+        case ']':
+        case ')':
+        case '-':
+          // Skip these characters
+          break;
+        default:
+          buffer.write(char);
+      }
+    }
+    return buffer.toString();
   }
 
   String _wrapDeferredImportLoad(String importPath, String instance) {
@@ -596,38 +641,23 @@ class CoordinatorGenerator implements Builder {
 
     // Sort routes by specificity (more segments first, static before dynamic)
     // This ensures static routes come before dynamic routes, allowing both to coexist
+    // Performance optimization: use pre-computed route characteristics
     final sortedRoutes = List<RouteInfo>.from(tree.routes)..sort((a, b) {
       // 1. Routes with rest params go last
-      final aHasRest = a.pathSegments.any((s) => s.startsWith('...:'));
-      final bHasRest = b.pathSegments.any((s) => s.startsWith('...:'));
-      if (aHasRest && !bHasRest) return 1; // a goes after b
-      if (!aHasRest && bHasRest) return -1; // a goes before b
+      if (a.hasRestParams && !b.hasRestParams) return 1; // a goes after b
+      if (!a.hasRestParams && b.hasRestParams) return -1; // a goes before b
 
-      // 2. More static segments first (rest params excluded from count)
-      final aStaticCount =
-          a.pathSegments
-              .where((s) => !s.startsWith(':') && !s.startsWith('...'))
-              .length;
-      final bStaticCount =
-          b.pathSegments
-              .where((s) => !s.startsWith(':') && !s.startsWith('...'))
-              .length;
-      if (aStaticCount != bStaticCount) return bStaticCount - aStaticCount;
+      // 2. More static segments first (cached)
+      if (a.staticSegmentCount != b.staticSegmentCount) {
+        return b.staticSegmentCount - a.staticSegmentCount;
+      }
 
       // 3. More total segments first
       final segmentDiff = b.pathSegments.length - a.pathSegments.length;
       if (segmentDiff != 0) return segmentDiff;
 
-      // 4. Static segments before dynamic (single params)
-      final aDynamic =
-          a.pathSegments
-              .where((s) => s.startsWith(':') && !s.startsWith('...'))
-              .length;
-      final bDynamic =
-          b.pathSegments
-              .where((s) => s.startsWith(':') && !s.startsWith('...'))
-              .length;
-      return aDynamic - bDynamic;
+      // 4. Static segments before dynamic (cached)
+      return a.dynamicSegmentCount - b.dynamicSegmentCount;
     });
 
     // Root route
@@ -959,6 +989,11 @@ class RouteInfo {
   String? parentLayoutType;
   String? filePath; // File path for error reporting
 
+  // Cached path characteristics for performance (computed once during construction)
+  late final bool _hasRestParams;
+  late final int _staticSegmentCount;
+  late final int _dynamicSegmentCount;
+
   RouteInfo({
     required this.className,
     required this.pathSegments,
@@ -973,10 +1008,30 @@ class RouteInfo {
     this.queries,
     this.parentLayoutType,
     this.filePath,
-  });
+  }) {
+    // Pre-compute path characteristics for faster sorting
+    _hasRestParams = pathSegments.any((s) => s.startsWith('...:'));
+    _staticSegmentCount =
+        pathSegments
+            .where((s) => !s.startsWith(':') && !s.startsWith('...'))
+            .length;
+    _dynamicSegmentCount =
+        pathSegments
+            .where((s) => s.startsWith(':') && !s.startsWith('...'))
+            .length;
+  }
 
   /// Whether this route expects query parameters.
   bool get hasQueries => queries != null && queries!.isNotEmpty;
+
+  /// Cached: whether this route has rest parameters
+  bool get hasRestParams => _hasRestParams;
+
+  /// Cached: number of static segments
+  int get staticSegmentCount => _staticSegmentCount;
+
+  /// Cached: number of dynamic segments (excluding rest params)
+  int get dynamicSegmentCount => _dynamicSegmentCount;
 }
 
 /// Simplified layout info for coordinator generation.
