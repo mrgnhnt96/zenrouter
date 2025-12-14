@@ -232,6 +232,68 @@ abstract class Coordinator<T extends RouteUnique> with ChangeNotifier {
     }
   }
 
+  /// Navigates to a specific route, handling history restoration and stack management.
+  ///
+  /// This method is primarily used by [CoordinatorRouterDelegate.setNewRoutePath]
+  /// to handle browser back/forward navigation or direct URL updates.
+  ///
+  /// **Behavior:**
+  /// 1. Resolves the layout and path for the target [route].
+  /// 2. If the active path is a [NavigationPath]:
+  ///    - **Existing Route:** If the route is already in the stack (back navigation),
+  ///      it progressively pops the stack until the target route is reached.
+  ///      - Respects [RouteGuard]s during popping.
+  ///      - If a guard blocks popping, navigation is aborted and the URL is restored.
+  ///    - **New Route:** If the route is not in the stack, it calls [push] to add it.
+  /// 3. If the active path is an [IndexedStackPath]:
+  ///    - Resolves parent layouts and activates the target route (switching tabs).
+  ///
+  /// **Failure Handling:**
+  /// If layout resolution fails or a guard blocks the navigation, [notifyListeners]
+  /// is called to sync the browser URL back to the current application state.
+  Future<void> navigate(T route) async {
+    final layout = route.resolveLayout(this);
+    final routePath = layout?.resolvePath(this) ?? root;
+    var routeIndex = routePath.stack.indexOf(route);
+    switch (routePath) {
+      case NavigationPath():
+        if (routeIndex != -1) {
+          final popSuccess = await _resolveLayouts(
+            layout,
+            strategy: _ResolveLayoutStrategy.popUntil,
+          );
+          if (!popSuccess) {
+            // Layout resolution failed - restore the URL to current state
+            notifyListeners();
+            return;
+          }
+
+          // Pop until we reach the target route
+          while (routePath.stack.length > routeIndex + 1) {
+            final allowPop = await routePath.pop();
+            if (allowPop == null || !allowPop) {
+              // Guard blocked navigation or stack is empty - restore the URL
+              notifyListeners();
+              return;
+            }
+          }
+        } else {
+          push(route);
+        }
+      case IndexedStackPath():
+        final popSuccess = await _resolveLayouts(
+          layout,
+          strategy: _ResolveLayoutStrategy.popUntil,
+        );
+        if (!popSuccess) {
+          // Layout resolution failed - restore the URL to current state
+          notifyListeners();
+          return;
+        }
+        routePath.activateRoute(route);
+    }
+  }
+
   /// Wipes the current navigation stack and replaces it with the new route.
   Future<void> replace(T route) async {
     for (final path in paths) {
@@ -423,50 +485,13 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   Future<void> setNewRoutePath(Uri configuration) async {
     final route = await coordinator.parseRouteFromUri(configuration);
 
-    if (_initialRouteSet == false) {
+    if (_initialRouteSet == false ||
+        route is RouteDeepLink &&
+            route.deeplinkStrategy == DeeplinkStrategy.custom) {
       _initialRouteSet = true;
       coordinator.recover(route);
     } else {
-      final layout = route.resolveLayout(coordinator);
-      final routePath = layout?.resolvePath(coordinator) ?? coordinator.root;
-      var routeIndex = routePath.stack.indexOf(route);
-      switch (routePath) {
-        case NavigationPath():
-          if (routeIndex != -1) {
-            final popSuccess = await coordinator._resolveLayouts(
-              layout,
-              strategy: _ResolveLayoutStrategy.popUntil,
-            );
-            if (!popSuccess) {
-              // Layout resolution failed - restore the URL to current state
-              coordinator.notifyListeners();
-              return;
-            }
-
-            // Pop until we reach the target route
-            while (routePath.stack.length > routeIndex + 1) {
-              final allowPop = await routePath.pop();
-              if (allowPop == null || !allowPop) {
-                // Guard blocked navigation or stack is empty - restore the URL
-                coordinator.notifyListeners();
-                return;
-              }
-            }
-          } else {
-            coordinator.push(route);
-          }
-        case IndexedStackPath():
-          final popSuccess = await coordinator._resolveLayouts(
-            layout,
-            strategy: _ResolveLayoutStrategy.popUntil,
-          );
-          if (!popSuccess) {
-            // Layout resolution failed - restore the URL to current state
-            coordinator.notifyListeners();
-            return;
-          }
-          routePath.activateRoute(route);
-      }
+      coordinator.navigate(route);
     }
   }
 
