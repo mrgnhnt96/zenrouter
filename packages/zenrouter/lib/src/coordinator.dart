@@ -234,6 +234,14 @@ abstract class Coordinator<T extends RouteUnique> with ChangeNotifier {
 
   /// Navigates to a specific route, handling history restoration and stack management.
   ///
+  /// **Why this exists:**
+  /// Standard [push] always adds a new route to the stack, which can lead to
+  /// duplicate entries and confusing browser history (e.g., A -> B -> A -> B).
+  /// [navigate] is smarter: it checks if the target route already exists in the
+  /// stack (e.g., in a browser "Back" scenario) and pops back to it instead of
+  /// pushing a new instance. This ensures the navigation stack mirrors the
+  /// user's expected history state.
+  ///
   /// This method is primarily used by [CoordinatorRouterDelegate.setNewRoutePath]
   /// to handle browser back/forward navigation or direct URL updates.
   ///
