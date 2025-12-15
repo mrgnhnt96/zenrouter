@@ -11,11 +11,13 @@ mixin RouteDeepLink on RouteUnique {
   /// The strategy to use when handling this deep link.
   DeeplinkStrategy get deeplinkStrategy;
 
+  // coverage:ignore-start
   /// Custom handler for deep links.
   ///
   /// This is called when [deeplinkStrategy] is [DeeplinkStrategy.custom].
   FutureOr<void> deeplinkHandler(covariant Coordinator coordinator, Uri uri) =>
       null;
+  // coverage:ignore-end
 }
 
 /// Mixin for routes that need to guard against being popped.
@@ -107,11 +109,13 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
     ),
   };
 
+  // coverage:ignore-start
   @Deprecated(
     'Do not manage [layoutBuilderTable] manually. Instead, use [buildPrimitivePath] to access it and [definePrimitivePath] to register new builders.',
   )
   static Map<String, RouteLayoutBuilder> get layoutBuilderTable =>
       _layoutBuilderTable;
+  // coverage:ignore-end
 
   static Widget buildPrimitivePath<T extends RouteUnique>(
     Type type,

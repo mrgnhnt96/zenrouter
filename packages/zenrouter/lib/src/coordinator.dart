@@ -383,7 +383,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// - `true` if the route can pop
   /// - `false` if the route can't pop
   /// - `null` if the [RouteGuard] want manual control
-  Future<bool?> tryPop() async {
+  Future<bool?> tryPop([Object? result]) async {
     // Get all dynamic paths from the active layout paths
     final dynamicPaths = activeLayoutPaths.whereType<NavigationPath>().toList();
 
@@ -391,14 +391,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     for (var i = dynamicPaths.length - 1; i >= 0; i--) {
       final path = dynamicPaths[i];
       if (path.stack.length >= 2) {
-        final last = path.stack.last;
-        if (last is RouteGuard) {
-          final didPop = await last.popGuardWith(this);
-          path.pop();
-          return didPop;
-        }
-        path.pop();
-        return true;
+        return await path.pop(result);
       }
     }
 
@@ -475,7 +468,8 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   /// Otherwise, the route will be parsed from the URI and recovered.
   @override
   Future<void> setInitialRoutePath(Uri configuration) async {
-    if (initialRoute != null) {
+    if (initialRoute != null &&
+        (configuration.path == '/' || configuration.path == '')) {
       coordinator.recover(initialRoute!);
       return;
     }

@@ -92,13 +92,13 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   static NavigationPath<T> navigationStack<T extends RouteTarget>([
     String? debugLabel,
     List<T>? stack,
-  ]) => NavigationPath<T>(debugLabel, stack);
+  ]) => NavigationPath<T>._(debugLabel, stack);
 
   /// Creates an [IndexedStackPath] with a fixed list of routes.
   static IndexedStackPath<T> indexedStack<T extends RouteTarget>(
     List<T> stack, [
     String? debugLabel,
-  ]) => IndexedStackPath<T>(stack, debugLabel);
+  ]) => IndexedStackPath<T>._(stack, debugLabel: debugLabel);
 
   /// A label for debugging purposes.
   final String? debugLabel;

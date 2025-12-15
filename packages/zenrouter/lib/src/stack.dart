@@ -209,7 +209,7 @@ class DeclarativeNavigationStack<T extends RouteTarget> extends StatefulWidget {
 
 class _DeclarativeNavigationStackState<T extends RouteTarget>
     extends State<DeclarativeNavigationStack<T>> {
-  late final path = NavigationPath<T>(widget.debugLabel);
+  late final path = NavigationPath<T>.create(label: widget.debugLabel);
   List<T> _previousRoutes = [];
 
   @override
