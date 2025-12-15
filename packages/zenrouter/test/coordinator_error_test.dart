@@ -317,39 +317,6 @@ void main() {
         );
       },
     );
-
-    test(
-      'createLayout throws UnimplementedError with helpful message when layout constructor not defined',
-      () {
-        final coordinator = ErrorTestCoordinator();
-        final route = RouteWithUndefinedLayout();
-
-        expect(
-          () => route.createLayout(coordinator),
-          throwsA(
-            isA<UnimplementedError>()
-                .having(
-                  (e) => e.message,
-                  'message',
-                  contains(
-                    'Layout constructor for [UndefinedLayout] must define',
-                  ),
-                )
-                .having(
-                  (e) => e.message,
-                  'message',
-                  contains('[RouteLayout.layoutConstructorTable]'),
-                )
-                .having(
-                  (e) => e.message,
-                  'message',
-                  contains('[defineLayout] function'),
-                )
-                .having((e) => e.message, 'message', contains('[Coordinator]')),
-          ),
-        );
-      },
-    );
   });
 
   group('Error Message Quality Tests', () {
@@ -407,10 +374,10 @@ void main() {
         expect(e.message, contains('UndefinedLayout'));
         // Should tell where to define
         expect(e.message, contains('defineLayout'));
-        // Should mention the table
-        expect(e.message, contains('layoutConstructorTable'));
-        // Should reference coordinator
-        expect(e.message, contains('Coordinator'));
+        // Should mention how to define
+        expect(e.message, contains('RouteLayout.defineLayout'));
+        // Should reference your coordinator
+        expect(e.message, contains('ErrorTestCoordinator'));
       }
     });
 
@@ -429,15 +396,13 @@ void main() {
         final message = e.message ?? '';
 
         // What: mentions the specific layout type
+        expect(message, contains('Missing'));
         expect(message, contains('UndefinedLayout'));
 
         // Where: mentions where to register
-        expect(message, contains('layoutConstructorTable'));
+        expect(message, contains('RouteLayout.defineLayout'));
         expect(message, contains('defineLayout'));
-        expect(message, contains('Coordinator'));
-
-        // How: uses action words like "define" and "must"
-        expect(message, contains('must define'));
+        expect(message, contains('ErrorTestCoordinator'));
       }
     });
   });
