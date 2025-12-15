@@ -269,6 +269,9 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
   /// Handles guards on the current route and redirects on the new route.
   Future<void> goToIndexed(int index) async {
     if (index >= stack.length) throw StateError('Index out of bounds');
+
+    /// Ignore already active index
+    if (index == _activeIndex) return;
     final oldIndex = _activeIndex;
     final oldRoute = stack[oldIndex];
     if (oldRoute is RouteGuard) {
