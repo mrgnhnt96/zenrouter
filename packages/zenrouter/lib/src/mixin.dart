@@ -27,11 +27,16 @@ mixin RouteGuard on RouteTarget {
   /// Return `true` to allow the pop, or `false` to prevent it.
   FutureOr<bool> popGuard() => true;
 
-  /// Use [popGuardWith] when using [RouteGuard] with [RouteUnique]
+  /// Called in [Coordinator] or [StackPath] that contains [Coordinator] when the route is about to be popped.
+  ///
+  /// This method helps ensuring the path belong to that route have the same coordinator with coordinator that with function take.
+  /// Return `true` to allow the pop, or `false` to prevent it.
   FutureOr<bool> popGuardWith(covariant Coordinator coordinator) {
-    assert(_path?._coordinator == null, '''
-[RouteGuard] The path [${_path.toString()}] isn't provided to the coordinator. You should change the constructor to .coordinator() and pass the coordinator to the path constructor.
-If you use with [Coordinator], put `late` keyword before the variable so you can access it in path constructor.
+    assert(_path?.coordinator == coordinator, '''
+[RouteGuard] The path [${_path.toString()}] is associated with a different coordinator (or null) than the one currently handling the navigation.
+Expected coordinator: $coordinator
+Path's coordinator: ${_path?.coordinator}
+Ensure that the path is created with the correct coordinator using `.coordinator()` and that routes are being managed by the correct coordinator.
 ''');
     return popGuard();
   }
@@ -201,10 +206,16 @@ mixin RouteRedirect<T extends RouteTarget> on RouteTarget {
   /// Returns the route to redirect to, or `null` to stay on the current route.
   FutureOr<T?> redirect() => null;
 
+  /// Called in [Coordinator] or [StackPath] that contains [Coordinator] when the route is resolving.
+  ///
+  /// This method helps ensuring the path belong to that route have the same coordinator with coordinator that with function take.
+  /// Returns the route to redirect to, or `null` to stay on the current route.
   FutureOr<T?> redirectWith(covariant Coordinator coordinator) {
-    assert(_path?._coordinator == null, '''
-[RouteRedirect] The path [${_path.toString()}] isn't provided to the coordinator. You should change the constructor to .coordinator() and pass the coordinator to the path constructor.
-If you use with [Coordinator], put `late` keyword before the variable so you can access it in path constructor.
+    assert(_path?.coordinator == coordinator, '''
+[RouteRedirect] The path [${_path.toString()}] is associated with a different coordinator (or null) than the one currently handling the navigation.
+Expected coordinator: $coordinator
+Path's coordinator: ${_path?.coordinator}
+Ensure that the path is created with the correct coordinator using `.coordinator()` and that routes are being managed by the correct coordinator.
 ''');
     return redirect();
   }
@@ -289,7 +300,7 @@ mixin RouteUnique on RouteTarget {
     final constructor = RouteLayout.layoutConstructorTable[layout];
     if (constructor == null) {
       throw UnimplementedError(
-        'Layout constructor for [$layout] must define in [RouteLayout.layoutConstructorTable] in [defineLayout] function at your [Coordinator]',
+        'Layout constructor for [layout] must define by calling [RouteLayout.defineLayout] in [defineLayout] function at your [Coordinator]',
       );
     }
     return constructor();
