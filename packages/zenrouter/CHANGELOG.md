@@ -1,5 +1,6 @@
 ## 0.4.1
 - **Fix**: Ensure [Coordinator.routeDelegate] initialize once
+- **Improvement**: Add [IndexedStackPathBuilder] for improve performance for rendering [IndexedStackPath]
 
 ## 0.4.0
 - **Breaking Change**: Deprecated default constructors for `NavigationPath` and `IndexedStackPath`. Use `NavigationPath.create`/`createWith` and `IndexedStackPath.create`/`createWith` instead.
