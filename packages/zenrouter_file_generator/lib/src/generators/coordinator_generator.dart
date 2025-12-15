@@ -590,13 +590,16 @@ class CoordinatorGenerator implements Builder {
             .map((r) => '$r()')
             .join(', ');
         buffer.writeln(
-          '  final IndexedStackPath<$routeBaseName> $pathFieldName = IndexedStackPath([',
+          '  late final IndexedStackPath<$routeBaseName> $pathFieldName = IndexedStackPath.createWith('
+          'coordinator: this, '
+          "label: '$pathName', "
+          '[',
         );
         buffer.writeln('    $routeInstances,');
-        buffer.writeln("  ], '$pathName');");
+        buffer.writeln("  ],);");
       } else {
         buffer.writeln(
-          "  final NavigationPath<$routeBaseName> $pathFieldName = NavigationPath('$pathName');",
+          "  late final NavigationPath<$routeBaseName> $pathFieldName = NavigationPath.createWith(coordinator: this, label: '$pathName');",
         );
       }
     }

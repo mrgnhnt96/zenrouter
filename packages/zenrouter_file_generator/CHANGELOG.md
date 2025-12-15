@@ -1,3 +1,6 @@
+## 0.4.0
+- **BREAKING CHANGE**: Upgraded generated code to use `zenrouter` 0.4.0+ constructor syntax (`NavigationPath.createWith`/`IndexedStackPath.createWith`). Requires `zenrouter: ^0.4.0`.
+
 ## 0.3.1
 
 - **NEW FEATURE**: Add ability to lazy load routes using the `deferredImport` option in the `@ZenCoordinator` annotation

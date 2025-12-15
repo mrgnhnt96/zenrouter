@@ -406,7 +406,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   late final CoordinatorRouterDelegate routerDelegate =
       CoordinatorRouterDelegate(coordinator: this);
 
-  /// The router delegate for [Router]
+  /// The router delegate for [Router] with initial route
   CoordinatorRouterDelegate routerDelegateWithInitalRoute(T route) =>
       CoordinatorRouterDelegate(coordinator: this, initialRoute: route);
 

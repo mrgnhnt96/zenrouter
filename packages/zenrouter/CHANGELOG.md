@@ -4,6 +4,8 @@
 - **Feat**: Added `popGuardWith` to `RouteGuard` and `redirectWith` to `RouteRedirect` for coordinator-aware mixin logic.
 - **Feat**: Added strict path-coordinator binding support via `createWith` factories.
 - **Docs**: Added comprehensive [Migration Guide](MIGRATION_GUIDE.md).
+- **Feat**: Added `routerDelegateWithInitalRoute` to `Coordinator`.
+- **Feat**: Enhanced `setInitialRoutePath` to correctly handle initial routes vs deep links.
 
 ## 0.3.2
 - Add `navigate` function: A smarter alternative to `push` that handles browser history restoration by popping to existing routes instead of duplicating them.

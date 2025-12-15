@@ -47,8 +47,8 @@ abstract class AppRoute extends RouteTarget with RouteUnique {}
 /// Generated coordinator managing all routes.
 class AppCoordinator extends Coordinator<AppRoute> {
   late final NavigationPath<AppRoute> authPath = NavigationPath.createWith(
-    label: 'Auth',
     coordinator: this,
+    label: 'Auth',
   );
   late final IndexedStackPath<AppRoute> tabsPath = IndexedStackPath.createWith(
     coordinator: this,
@@ -61,12 +61,12 @@ class AppCoordinator extends Coordinator<AppRoute> {
         ForYouLayout(),
       ]);
   late final NavigationPath<AppRoute> followingPath = NavigationPath.createWith(
-    label: 'Following',
     coordinator: this,
+    label: 'Following',
   );
   late final NavigationPath<AppRoute> forYouPath = NavigationPath.createWith(
-    label: 'ForYou',
     coordinator: this,
+    label: 'ForYou',
   );
 
   @override
