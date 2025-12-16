@@ -24,10 +24,12 @@ mixin RouteDeepLink on RouteUnique {
 ///
 /// Implement [popGuard] to control whether the route can be popped.
 mixin RouteGuard on RouteTarget {
+  // coverage:ignore-start
   /// Called when the route is about to be popped.
   ///
   /// Return `true` to allow the pop, or `false` to prevent it.
   FutureOr<bool> popGuard() => true;
+  // coverage:ignore-end
 
   /// Called in [Coordinator] or [StackPath] that contains [Coordinator] when the route is about to be popped.
   ///
@@ -88,11 +90,24 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
           ? coordinator.routerDelegate.navigatorKey
           : null,
       coordinator: coordinator,
-      resolver: (route) => switch (route) {
-        RouteTransition() => route.transition(coordinator),
-        _ => StackTransition.none(
-          Builder(builder: (context) => route.build(coordinator, context)),
-        ),
+      resolver: (route) {
+        switch (route) {
+          case RouteTransition():
+            return route.transition(coordinator);
+          default:
+            final builder = Builder(
+              builder: (context) => route.build(coordinator, context),
+            );
+            return switch (coordinator.transitionStrategy) {
+              DefaultTransitionStrategy.material => StackTransition.material(
+                builder,
+              ),
+              DefaultTransitionStrategy.cupertino => StackTransition.cupertino(
+                builder,
+              ),
+              DefaultTransitionStrategy.none => StackTransition.none(builder),
+            };
+        }
       },
     ),
     indexedStackPath: (coordinator, path, layout) => ListenableBuilder(

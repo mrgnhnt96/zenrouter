@@ -1,3 +1,7 @@
+## 0.4.2
+- **Feat**: Add `transitionStrategy` to `Coordinator` for default stack transition setup
+- **Fix**: Ensure when [Navigator.pop] called sync new stack with [NavigationPath]
+
 ## 0.4.1
 - **Fix**: Ensure [Coordinator.routeDelegate] initialize once
 - **Improvement**: Add [IndexedStackPathBuilder] for improve performance for rendering [IndexedStackPath]

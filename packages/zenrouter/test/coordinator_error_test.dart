@@ -157,6 +157,80 @@ class ErrorTestCoordinator extends Coordinator<ErrorTestRoute> {
   }
 }
 
+// Custom StackPath that will not have a registered builder
+class UnregisteredCustomPath<T extends RouteUnique> extends StackPath<T> {
+  UnregisteredCustomPath({
+    required Coordinator coordinator,
+    required String label,
+  }) : super([], debugLabel: label, coordinator: coordinator);
+
+  @override
+  T? get activeRoute => stack.isEmpty ? null : stack.last;
+
+  @override
+  Future<void> activateRoute(T route) async {
+    if (!stack.contains(route)) {
+      stack.add(route);
+    }
+    notifyListeners();
+  }
+
+  @override
+  void reset() {
+    stack.clear();
+    notifyListeners();
+  }
+}
+
+class LayoutWithUnregisteredPath extends ErrorTestRoute
+    with RouteLayout<ErrorTestRoute> {
+  final UnregisteredCustomPath<ErrorTestRoute> customPath;
+
+  LayoutWithUnregisteredPath(this.customPath);
+
+  @override
+  StackPath<RouteUnique> resolvePath(ErrorTestCoordinator coordinator) =>
+      customPath;
+
+  @override
+  Uri toUri() => Uri.parse('/layout-unregistered-path');
+
+  @override
+  List<Object?> get props => [];
+}
+
+class GuardedTestRoute extends ErrorTestRoute with RouteGuard {
+  GuardedTestRoute({this.allowPop = true});
+  final bool allowPop;
+
+  @override
+  Uri toUri() => Uri.parse('/guarded');
+
+  @override
+  Future<bool> popGuard() async => allowPop;
+
+  @override
+  Widget build(
+    covariant ErrorTestCoordinator coordinator,
+    BuildContext context,
+  ) {
+    return const Scaffold(body: Text('Guarded'));
+  }
+
+  @override
+  List<Object?> get props => [allowPop];
+}
+
+class SecondCoordinator extends Coordinator<ErrorTestRoute> {
+  @override
+  void defineLayout() {}
+
+  @override
+  ErrorTestRoute parseRouteFromUri(Uri uri) {
+    return SimpleErrorRoute(id: 'second');
+  }
+}
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -445,5 +519,175 @@ void main() {
         returnsNormally,
       );
     });
+  });
+
+  group('RouteLayout.build Error Tests', () {
+    testWidgets(
+      'RouteLayout.build throws UnimplementedError when builder is null',
+      (tester) async {
+        final coordinator = ErrorTestCoordinator();
+        final customPath = UnregisteredCustomPath<ErrorTestRoute>(
+          coordinator: coordinator,
+          label: 'custom',
+        );
+        final layout = LayoutWithUnregisteredPath(customPath);
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator.routerDelegate,
+            routeInformationParser: coordinator.routeInformationParser,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Push the layout which will trigger RouteLayout.build
+        coordinator.push(layout);
+        await tester.pumpAndSettle();
+
+        // Flutter catches build errors
+        final exception = tester.takeException();
+        expect(exception, isA<UnimplementedError>());
+        expect(
+          (exception as UnimplementedError).message,
+          contains(
+            'If you define new kind of path layout you must register it at [RouteLayout.layoutTable]',
+          ),
+        );
+      },
+    );
+
+    test('RouteLayout.build error message is helpful', () {
+      final coordinator = ErrorTestCoordinator();
+      final customPath = UnregisteredCustomPath<ErrorTestRoute>(
+        coordinator: coordinator,
+        label: 'custom',
+      );
+      final layout = LayoutWithUnregisteredPath(customPath);
+
+      // Verify that attempting to build will throw an error
+      // by checking that buildPrimitivePath fails for this type
+      expect(
+        () => RouteLayout.buildPrimitivePath(
+          UnregisteredCustomPath,
+          coordinator,
+          customPath,
+          layout,
+        ),
+        throwsA(
+          isA<UnimplementedError>().having(
+            (e) => e.message,
+            'message',
+            contains('layoutBuilderTable'),
+          ),
+        ),
+      );
+    });
+  });
+
+  group('RouteGuard.popGuardWith Assertion Tests', () {
+    test('popGuardWith asserts when coordinator mismatch', () async {
+      final coordinator1 = ErrorTestCoordinator();
+      final coordinator2 = SecondCoordinator();
+
+      final route = GuardedTestRoute();
+
+      // Push the route to coordinator1
+      coordinator1.push(route);
+
+      // Try to call popGuardWith with coordinator2 (wrong coordinator)
+      expect(
+        () => route.popGuardWith(coordinator2),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test(
+      'popGuardWith assertion message contains helpful information',
+      () async {
+        final coordinator1 = ErrorTestCoordinator();
+        final coordinator2 = SecondCoordinator();
+
+        final route = GuardedTestRoute();
+
+        // Push the route to coordinator1
+        coordinator1.push(route);
+
+        // Try to call popGuardWith with coordinator2
+        try {
+          route.popGuardWith(coordinator2);
+          fail('Should have thrown AssertionError');
+        } on AssertionError catch (e) {
+          final message = e.message.toString();
+          // Should mention RouteGuard
+          expect(message, contains('RouteGuard'));
+          // Should mention the expected coordinator
+          expect(message, contains('Expected coordinator'));
+          // Should mention path's coordinator
+          expect(message, contains('Path\'s coordinator'));
+          // Should guide on using createWith
+          expect(message, contains('.createWith()'));
+        }
+      },
+    );
+
+    test('popGuardWith works correctly when coordinators match', () async {
+      final coordinator = ErrorTestCoordinator();
+      final route = GuardedTestRoute(allowPop: true);
+
+      coordinator.push(route);
+      await Future.delayed(Duration.zero);
+
+      // Should not throw when using the correct coordinator
+      final result = await route.popGuardWith(coordinator);
+      expect(result, isTrue);
+    });
+
+    test('popGuardWith respects popGuard return value', () async {
+      final coordinator = ErrorTestCoordinator();
+
+      // Test with allowPop = false
+      final blockedRoute = GuardedTestRoute(allowPop: false);
+      coordinator.push(blockedRoute);
+      await Future.delayed(Duration.zero);
+
+      final blockedResult = await blockedRoute.popGuardWith(coordinator);
+      expect(blockedResult, isFalse);
+
+      // Clear the stack
+      coordinator.root.reset();
+
+      // Test with allowPop = true
+      final allowedRoute = GuardedTestRoute(allowPop: true);
+      coordinator.push(allowedRoute);
+      await Future.delayed(Duration.zero);
+
+      final allowedResult = await allowedRoute.popGuardWith(coordinator);
+      expect(allowedResult, isTrue);
+    });
+
+    testWidgets(
+      'popGuardWith assertion prevents incorrect coordinator usage in navigation',
+      (tester) async {
+        final coordinator1 = ErrorTestCoordinator();
+        final coordinator2 = SecondCoordinator();
+
+        await tester.pumpWidget(
+          MaterialApp.router(
+            routerDelegate: coordinator1.routerDelegate,
+            routeInformationParser: coordinator1.routeInformationParser,
+          ),
+        );
+
+        final route = GuardedTestRoute();
+        coordinator1.push(route);
+        await tester.pumpAndSettle();
+
+        // Attempting to use the wrong coordinator should trigger the assertion
+        expect(
+          () => route.popGuardWith(coordinator2),
+          throwsA(isA<AssertionError>()),
+        );
+      },
+    );
   });
 }

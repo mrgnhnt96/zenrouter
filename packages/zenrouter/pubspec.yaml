@@ -1,7 +1,20 @@
 name: zenrouter
-description: "The Ultimate Flutter Router for Every Navigation Pattern"
-version: 0.4.1
+description: >-
+  A powerful Flutter router supporting three paradigms (imperative, declarative, coordinator)
+  with deep linking, web support, type-safe routing, guards, redirects, and zero boilerplate.
+version: 0.4.2
+
+repository: https://github.com/definev/zenrouter
 homepage: https://github.com/definev/zenrouter/tree/main/packages/zenrouter
+issue_tracker: https://github.com/definev/zenrouter/issues
+documentation: https://github.com/definev/zenrouter/blob/main/packages/zenrouter/doc/guides/getting-started.md
+
+topics:
+  - router
+  - navigation
+  - routing
+  - deep-linking
+  - web
 
 environment:
   sdk: ^3.8.0

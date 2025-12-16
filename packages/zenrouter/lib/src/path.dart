@@ -85,7 +85,7 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
 /// A [StackPath] holds a list of [RouteTarget]s and manages their lifecycle.
 /// It notifies listeners when the stack changes.
 abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
-  StackPath._(this._stack, {this.debugLabel, Coordinator? coordinator})
+  StackPath(this._stack, {this.debugLabel, Coordinator? coordinator})
     : _coordinator = coordinator;
 
   // coverage:ignore-start
@@ -150,7 +150,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
     String? debugLabel,
     List<T>? stack,
     Coordinator? coordinator,
-  ]) : super._(stack ?? [], debugLabel: debugLabel, coordinator: coordinator);
+  ]) : super(stack ?? [], debugLabel: debugLabel, coordinator: coordinator);
 
   // coverage:ignore-start
   /// Creates a [NavigationPath] with an optional initial stack.
@@ -217,7 +217,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
 class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
   IndexedStackPath._(super.stack, {super.debugLabel, super.coordinator})
     : assert(stack.isNotEmpty, 'Read-only path must have at least one route'),
-      super._() {
+      super() {
     for (final path in stack) {
       /// Set the output of every route to null since this cannot pop
       path.completeOnResult(null, null);
