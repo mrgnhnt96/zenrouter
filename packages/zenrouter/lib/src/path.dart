@@ -88,6 +88,7 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   StackPath._(this._stack, {this.debugLabel, Coordinator? coordinator})
     : _coordinator = coordinator;
 
+  // coverage:ignore-start
   /// Creates a [NavigationPath] with an optional initial stack.
   static NavigationPath<T> navigationStack<T extends RouteTarget>([
     String? debugLabel,
@@ -99,6 +100,7 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
     List<T> stack, [
     String? debugLabel,
   ]) => IndexedStackPath<T>._(stack, debugLabel: debugLabel);
+  // coverage:ignore-end
 
   /// A label for debugging purposes.
   final String? debugLabel;
@@ -150,6 +152,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
     Coordinator? coordinator,
   ]) : super._(stack ?? [], debugLabel: debugLabel, coordinator: coordinator);
 
+  // coverage:ignore-start
   /// Creates a [NavigationPath] with an optional initial stack.
   ///
   /// This is deprecated. Use [NavigationPath.create] or [NavigationPath.createWith] instead.
@@ -159,6 +162,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
     List<T>? stack,
     Coordinator? coordinator,
   ]) => NavigationPath._(debugLabel, stack, coordinator);
+  // coverage:ignore-end
 
   /// Creates a [NavigationPath] with an optional initial stack.
   ///
@@ -220,6 +224,7 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
     }
   }
 
+  // coverage:ignore-start
   /// Creates an [IndexedStackPath] with a fixed list of routes.
   ///
   /// This is deprecated. Use [IndexedStackPath.create] or [IndexedStackPath.createWith] instead.
@@ -235,6 +240,7 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
     debugLabel: debugLabel,
     coordinator: coordinator,
   );
+  // coverage:ignore-end
 
   /// Creates an [IndexedStackPath] with a fixed list of routes.
   ///
@@ -257,9 +263,11 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
 
   int _activeIndex = 0;
 
+  // coverage:ignore-start
   /// The index of the currently active path in the stack.
   @Deprecated('Use `activeIndex` insteads. This will be removed in 1.0.0')
   int get activePathIndex => _activeIndex;
+  // coverage:ignore-end
 
   /// The index of the currently active path in the stack.
   int get activeIndex => _activeIndex;

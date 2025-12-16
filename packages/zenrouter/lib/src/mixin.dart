@@ -145,9 +145,11 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   /// This determines which [StackPath] this layout manages.
   StackPath<RouteUnique> resolvePath(covariant Coordinator coordinator);
 
+  // coverage:ignore-start
   /// URI not use in RouteLayout
   @override
   Uri toUri() => Uri.parse('/');
+  // coverage:ignore-end
 
   @override
   Widget build(covariant Coordinator coordinator, BuildContext context) {
@@ -205,8 +207,10 @@ mixin RouteRedirect<T extends RouteTarget> on RouteTarget {
     return target;
   }
 
+  // coverage:ignore-start
   /// Returns the route to redirect to, or `null` to stay on the current route.
   FutureOr<T?> redirect() => null;
+  // coverage:ignore-end
 
   /// Called in [Coordinator] or [StackPath] that contains [Coordinator] when the route is resolving.
   ///
@@ -248,7 +252,17 @@ abstract class RouteTarget extends Equatable {
   @override
   List<Object?> get props => [];
 
-  void onDidPop(Object? result, covariant Coordinator? coordinator) {}
+  @mustCallSuper
+  void onDidPop(Object? result, covariant Coordinator? coordinator) {
+    /// Handle force pop from navigator
+    if (coordinator == null &&
+        isPopByPath == false &&
+        _path?.stack.contains(this) == true) {
+      if (_path case NavigationPath path) {
+        path.remove(this);
+      }
+    }
+  }
 
   /// Completes the route's result future.
   ///
@@ -327,6 +341,7 @@ mixin RouteUnique on RouteTarget {
     Object? result,
     covariant Coordinator<RouteUnique>? coordinator,
   ) {
+    super.onDidPop(result, coordinator);
     if (_path case NavigationPath path) {
       if (this is! RouteGuard && !isPopByPath) {
         path.remove(this);

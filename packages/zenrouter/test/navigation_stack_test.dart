@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zenrouter/zenrouter.dart';
@@ -379,6 +381,245 @@ void main() {
     });
   });
 
+  group('NavigationStack - RouteGuard behavior', () {
+    testWidgets('Explicit guard in StackTransition', (tester) async {
+      final path = NavigationPath<_NormalRoute>.create();
+      final navigatorKey = GlobalKey<NavigatorState>(debugLabel: 'navigator');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_NormalRoute>(
+            path: path,
+            navigatorKey: navigatorKey,
+            defaultRoute: _NormalRoute('home'),
+            resolver: (route) => StackTransition.material(
+              Scaffold(body: Column(children: [Text('Route: ${route.id}')])),
+              guard: _GuardInternal(route.id),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      path.push(_NormalRoute('guarded'));
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+
+      // Tap the pop button - Navigator.pop will be called but guard rejects
+      navigatorKey.currentState!.maybePop('result');
+      await tester.pumpAndSettle();
+
+      // Path should NOT be updated (guard rejected)
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+    });
+
+    testWidgets('Navigator.maybePop updates path when guard allows', (
+      tester,
+    ) async {
+      final path = NavigationPath<_GuardedRoute>.create();
+      final navigatorKey = GlobalKey<NavigatorState>(debugLabel: 'navigator');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_GuardedRoute>(
+            path: path,
+            navigatorKey: navigatorKey,
+            defaultRoute: _GuardedRoute('home', allowPop: true),
+            resolver: (route) => StackTransition.material(
+              Scaffold(body: Column(children: [Text('Route: ${route.id}')])),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      path.push(_GuardedRoute('guarded', allowPop: true));
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+
+      // Tap the pop button - Navigator.pop will be called
+      navigatorKey.currentState!.maybePop();
+      await tester.pumpAndSettle();
+
+      // Path should be updated (popped)
+      expect(path.stack.length, 1);
+      expect(path.stack.last.id, 'home');
+    });
+
+    testWidgets(
+      'prevents Navigator.maybePop and does not update path when guard rejects',
+      (tester) async {
+        final path = NavigationPath<_GuardedRoute>.create();
+        final navigatorKey = GlobalKey<NavigatorState>(debugLabel: 'navigator');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: NavigationStack<_GuardedRoute>(
+              path: path,
+              navigatorKey: navigatorKey,
+              defaultRoute: _GuardedRoute('home', allowPop: true),
+              resolver: (route) => StackTransition.material(
+                Scaffold(body: Column(children: [Text('Route: ${route.id}')])),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        path.push(_GuardedRoute('guarded', allowPop: false));
+        await tester.pumpAndSettle();
+
+        expect(path.stack.length, 2);
+        expect(path.stack.last.id, 'guarded');
+
+        // Tap the pop button - Navigator.pop will be called but guard rejects
+        navigatorKey.currentState!.maybePop();
+        await tester.pumpAndSettle();
+
+        // Path should NOT be updated (guard rejected)
+        expect(path.stack.length, 2);
+        expect(path.stack.last.id, 'guarded');
+      },
+    );
+
+    testWidgets('ignore RouteGuard when receive a force pop from Navigator', (
+      tester,
+    ) async {
+      final path = NavigationPath<_GuardedRoute>.create();
+      final navigatorKey = GlobalKey<NavigatorState>(debugLabel: 'navigator');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_GuardedRoute>(
+            path: path,
+            navigatorKey: navigatorKey,
+            defaultRoute: _GuardedRoute('home', allowPop: true),
+            resolver: (route) => StackTransition.material(
+              Scaffold(body: Column(children: [Text('Route: ${route.id}')])),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      path.push(_GuardedRoute('guarded', allowPop: false));
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+
+      // Tap the pop button - Navigator.pop will be called but guard rejects
+      navigatorKey.currentState!.pop();
+      await tester.pumpAndSettle();
+
+      // Path should NOT be updated (guard rejected)
+      expect(path.stack.length, 1);
+      expect(path.stack.last.id, 'home');
+    });
+
+    testWidgets('Route receive a result from Navigator.pop', (tester) async {
+      final path = NavigationPath<_GuardedRoute>.create();
+      final navigatorKey = GlobalKey<NavigatorState>(debugLabel: 'navigator');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_GuardedRoute>(
+            path: path,
+            navigatorKey: navigatorKey,
+            defaultRoute: _GuardedRoute('home', allowPop: true),
+            resolver: (route) => StackTransition.material(
+              Scaffold(body: Column(children: [Text('Route: ${route.id}')])),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final guard = _GuardedRoute('guarded', allowPop: false);
+      final future = path.push(guard);
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+
+      // Tap the pop button - Navigator.pop will be called but guard rejects
+      navigatorKey.currentState!.pop('result');
+      await tester.pumpAndSettle();
+
+      // Path should NOT be updated (guard rejected)
+      expect(path.stack.length, 1);
+      expect(path.stack.last.id, 'home');
+      expect(await future, 'result');
+    });
+
+    testWidgets('path.pop() respects RouteGuard when guard allows', (
+      tester,
+    ) async {
+      final path = NavigationPath<_GuardedRoute>.create();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_GuardedRoute>(
+            path: path,
+            resolver: (route) =>
+                StackTransition.material(Text('Route: ${route.id}')),
+          ),
+        ),
+      );
+
+      path.push(_GuardedRoute('home', allowPop: true));
+      await tester.pumpAndSettle();
+      path.push(_GuardedRoute('guarded', allowPop: true));
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+
+      // Pop via path - guard should allow
+      final result = await path.pop();
+      await tester.pumpAndSettle();
+
+      expect(result, isTrue);
+      expect(path.stack.length, 1);
+      expect(path.stack.last.id, 'home');
+    });
+
+    testWidgets('path.pop() respects RouteGuard when guard rejects', (
+      tester,
+    ) async {
+      final path = NavigationPath<_GuardedRoute>.create();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NavigationStack<_GuardedRoute>(
+            path: path,
+            resolver: (route) =>
+                StackTransition.material(Text('Route: ${route.id}')),
+          ),
+        ),
+      );
+
+      path.push(_GuardedRoute('home', allowPop: true));
+      await tester.pumpAndSettle();
+      path.push(_GuardedRoute('guarded', allowPop: false));
+      await tester.pumpAndSettle();
+
+      expect(path.stack.length, 2);
+
+      // Pop via path - guard should reject
+      final result = await path.pop();
+      await tester.pumpAndSettle();
+
+      expect(result, isFalse);
+      expect(path.stack.length, 2);
+      expect(path.stack.last.id, 'guarded');
+    });
+  });
+
   group('DeclarativeNavigationStack - Diff-based updates', () {
     testWidgets('updates pages using diff when routes change', (tester) async {
       var routes = [TestRoute('a'), TestRoute('b')];
@@ -500,5 +741,40 @@ class _CounterWidgetState extends State<_CounterWidget> {
         ),
       ],
     );
+  }
+}
+
+// Helper route with RouteGuard for testing
+class _GuardedRoute extends RouteTarget with RouteGuard {
+  _GuardedRoute(this.id, {this.allowPop = true});
+
+  final String id;
+  final bool allowPop;
+
+  @override
+  Future<bool> popGuard() async => allowPop;
+
+  @override
+  List<Object?> get props => [id, allowPop];
+}
+
+class _NormalRoute extends RouteTarget {
+  _NormalRoute(this.id);
+
+  final String id;
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class _GuardInternal extends RouteTarget with RouteGuard {
+  _GuardInternal(this.id);
+
+  final String id;
+
+  @override
+  FutureOr<bool> popGuard() {
+    if (id == 'guarded') return false;
+    return true;
   }
 }
