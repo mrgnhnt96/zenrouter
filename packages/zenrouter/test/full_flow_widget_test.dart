@@ -242,14 +242,7 @@ class ShellRoute extends AppRoute with RouteLayout<AppRoute> {
       body: Column(
         children: [
           const Text('Shell Container'),
-          Expanded(
-            child: RouteLayout.buildPrimitivePath(
-              NavigationPath,
-              coordinator,
-              coordinator.shellStack,
-              this,
-            ),
-          ),
+          Expanded(child: buildPath(coordinator)),
         ],
       ),
     );

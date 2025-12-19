@@ -147,8 +147,10 @@ List<DiffOp<T>> myersDiff<T>(
     }
   }
 
+  // coverage:ignore-start
   // Should never reach here, but return empty list as fallback
   return [];
+  // coverage:ignore-end
 }
 
 /// Backtrack through the trace to construct the edit script.
@@ -185,10 +187,14 @@ List<DiffOp<T>> _backtrack<T>(
 
     final kMinusOne = (kMinusOneIndex >= 0 && kMinusOneIndex < vSize)
         ? v[kMinusOneIndex]
+        // coverage:ignore-start
         : -1;
+    // coverage:ignore-end
     final kPlusOne = (kPlusOneIndex >= 0 && kPlusOneIndex < vSize)
         ? v[kPlusOneIndex]
+        // coverage:ignore-start
         : -1;
+    // coverage:ignore-end
 
     if (k == -depth || (k != depth && kMinusOne < kPlusOne)) {
       prevK = k + 1;

@@ -19,12 +19,7 @@ class TabsLayout extends _$TabsLayout {
     final path = resolvePath(coordinator);
 
     return Scaffold(
-      body: RouteLayout.buildPrimitivePath(
-        IndexedStackPath,
-        coordinator,
-        path,
-        this,
-      ),
+      body: buildPath(coordinator),
       // User has full control over the navigation UI
       bottomNavigationBar: ListenableBuilder(
         listenable: path,

@@ -39,25 +39,12 @@ class FakeStackPathType {}
 class MockUnregisteredPathLayout extends ErrorTestRoute
     with RouteLayout<ErrorTestRoute> {
   @override
-  NavigationPath<ErrorTestRoute> resolvePath(
+  UnregisteredCustomPath<ErrorTestRoute> resolvePath(
     ErrorTestCoordinator coordinator,
   ) => coordinator.testStack;
 
   @override
   Uri toUri() => Uri.parse('/mock-unregistered-layout');
-
-  // Override build to manually test buildPrimitivePath with fake type
-  @override
-  Widget build(covariant Coordinator coordinator, BuildContext context) {
-    final testCoordinator = coordinator as ErrorTestCoordinator;
-    // This will trigger the error when called
-    return RouteLayout.buildPrimitivePath(
-      FakeStackPathType,
-      testCoordinator,
-      testCoordinator.testStack,
-      this,
-    );
-  }
 
   @override
   List<Object?> get props => [];
@@ -66,7 +53,7 @@ class MockUnregisteredPathLayout extends ErrorTestRoute
 /// Layout type that is NOT defined in defineLayout (for testing constructor error)
 class UndefinedLayout extends ErrorTestRoute with RouteLayout<ErrorTestRoute> {
   @override
-  NavigationPath<ErrorTestRoute> resolvePath(
+  UnregisteredCustomPath<ErrorTestRoute> resolvePath(
     ErrorTestCoordinator coordinator,
   ) => coordinator.testStack;
 
@@ -123,10 +110,46 @@ class RouteWithMockLayout extends ErrorTestRoute {
   List<Object?> get props => [];
 }
 
+class NormalIndexedStackLayout extends ErrorTestRoute
+    with RouteLayout<ErrorTestRoute> {
+  @override
+  IndexedStackPath<ErrorTestRoute> resolvePath(
+    ErrorTestCoordinator coordinator,
+  ) => coordinator.normalIndexedStack;
+
+  @override
+  Uri toUri() => Uri.parse('/normal-indexed-stack-layout');
+
+  @override
+  List<Object?> get props => [];
+}
+
+class NormalNavigationLayout extends ErrorTestRoute
+    with RouteLayout<ErrorTestRoute> {
+  @override
+  NavigationPath<ErrorTestRoute> resolvePath(
+    ErrorTestCoordinator coordinator,
+  ) => coordinator.normalStack;
+
+  @override
+  Uri toUri() => Uri.parse('/normal-layout');
+
+  @override
+  List<Object?> get props => [];
+}
+
 /// Test coordinator
 class ErrorTestCoordinator extends Coordinator<ErrorTestRoute> {
-  late final NavigationPath<ErrorTestRoute> testStack =
-      NavigationPath.createWith(coordinator: this, label: 'test');
+  late final UnregisteredCustomPath<ErrorTestRoute> testStack =
+      UnregisteredCustomPath(coordinator: this, label: 'test');
+  late final NavigationPath<ErrorTestRoute> normalStack =
+      NavigationPath.createWith(coordinator: this, label: 'root');
+  late final IndexedStackPath<ErrorTestRoute> normalIndexedStack =
+      IndexedStackPath.createWith(
+        [SimpleErrorRoute(id: 'home')],
+        coordinator: this,
+        label: 'root',
+      );
 
   @override
   void defineLayout() {
@@ -159,27 +182,35 @@ class ErrorTestCoordinator extends Coordinator<ErrorTestRoute> {
 
 // Custom StackPath that will not have a registered builder
 class UnregisteredCustomPath<T extends RouteUnique> extends StackPath<T> {
+  final List<T> _internalStack;
   UnregisteredCustomPath({
     required Coordinator coordinator,
     required String label,
-  }) : super([], debugLabel: label, coordinator: coordinator);
+  }) : _internalStack = <T>[],
+       super(<T>[], debugLabel: label, coordinator: coordinator);
 
   @override
-  T? get activeRoute => stack.isEmpty ? null : stack.last;
+  PathKey get pathKey => const PathKey('FakeStackPathType');
+
+  @override
+  T? get activeRoute => _internalStack.isEmpty ? null : _internalStack.last;
 
   @override
   Future<void> activateRoute(T route) async {
-    if (!stack.contains(route)) {
-      stack.add(route);
+    if (!_internalStack.contains(route)) {
+      _internalStack.add(route);
     }
     notifyListeners();
   }
 
   @override
   void reset() {
-    stack.clear();
+    _internalStack.clear();
     notifyListeners();
   }
+
+  @override
+  List<T> get stack => List.unmodifiable(_internalStack);
 }
 
 class LayoutWithUnregisteredPath extends ErrorTestRoute
@@ -324,17 +355,14 @@ void main() {
 
   group('RouteLayout Error Tests', () {
     test(
-      'buildPrimitivePath throws UnimplementedError with helpful message for unregistered StackPath type',
+      'buildPath throws UnimplementedError with helpful message for unregistered StackPath type',
       () {
         final coordinator = ErrorTestCoordinator();
 
+        final errorLayout = MockUnregisteredPathLayout();
+
         expect(
-          () => RouteLayout.buildPrimitivePath(
-            FakeStackPathType,
-            coordinator,
-            coordinator.testStack,
-            null,
-          ),
+          () => errorLayout.buildPath(coordinator),
           throwsA(
             isA<UnimplementedError>()
                 .having(
@@ -354,7 +382,7 @@ void main() {
                 .having(
                   (e) => e.message,
                   'message',
-                  contains('[RouteLayout.layoutBuilderTable]'),
+                  contains('[RouteLayout.definePath]'),
                 ),
           ),
         );
@@ -422,20 +450,17 @@ void main() {
     test('UnimplementedError messages contain actionable information', () {
       final coordinator = ErrorTestCoordinator();
 
-      // Test buildPrimitivePath error
+      final errorLayout = MockUnregisteredPathLayout();
+
+      // Test buildPath error
       try {
-        RouteLayout.buildPrimitivePath(
-          FakeStackPathType,
-          coordinator,
-          coordinator.testStack,
-          null,
-        );
+        errorLayout.buildPath(coordinator);
         fail('Should have thrown UnimplementedError');
       } on UnimplementedError catch (e) {
         // Should mention the type name
         expect(e.message, contains('FakeStackPathType'));
         // Should tell where to register
-        expect(e.message, contains('RouteLayout.layoutBuilderTable'));
+        expect(e.message, contains('RouteLayout.definePath'));
         // Should explain the condition
         expect(e.message, contains('extends [StackPath]'));
       }
@@ -494,30 +519,14 @@ void main() {
     test('Registered types do not throw errors', () {
       final coordinator = ErrorTestCoordinator();
 
+      final normalLayout = NormalNavigationLayout();
+
       // NavigationPath is registered by default
-      expect(
-        () => RouteLayout.buildPrimitivePath(
-          NavigationPath,
-          coordinator,
-          coordinator.root,
-          null,
-        ),
-        returnsNormally,
-      );
+      expect(() => normalLayout.buildPath(coordinator), returnsNormally);
 
       // IndexedStackPath is registered by default
-      final indexedStack = IndexedStackPath<ErrorTestRoute>.create([
-        SimpleErrorRoute(id: 'test'),
-      ], label: 'test');
-      expect(
-        () => RouteLayout.buildPrimitivePath(
-          IndexedStackPath,
-          coordinator,
-          indexedStack,
-          null,
-        ),
-        returnsNormally,
-      );
+      final indexedStackLayout = NormalIndexedStackLayout();
+      expect(() => indexedStackLayout.buildPath(coordinator), returnsNormally);
     });
   });
 
@@ -550,7 +559,7 @@ void main() {
         expect(
           (exception as UnimplementedError).message,
           contains(
-            'If you define new kind of path layout you must register it at [RouteLayout.layoutTable]',
+            'If you extends [StackPath] class you must register it by [RouteLayout.definePath]',
           ),
         );
       },
@@ -565,19 +574,14 @@ void main() {
       final layout = LayoutWithUnregisteredPath(customPath);
 
       // Verify that attempting to build will throw an error
-      // by checking that buildPrimitivePath fails for this type
+      // by checking that buildPath fails for this type
       expect(
-        () => RouteLayout.buildPrimitivePath(
-          UnregisteredCustomPath,
-          coordinator,
-          customPath,
-          layout,
-        ),
+        () => layout.buildPath(coordinator),
         throwsA(
           isA<UnimplementedError>().having(
             (e) => e.message,
             'message',
-            contains('layoutBuilderTable'),
+            contains('definePath'),
           ),
         ),
       );

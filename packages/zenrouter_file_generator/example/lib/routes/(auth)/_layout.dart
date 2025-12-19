@@ -66,12 +66,7 @@ class AuthLayout extends _$AuthLayout {
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(32),
                     ),
-                    child: RouteLayout.buildPrimitivePath(
-                      NavigationPath,
-                      coordinator,
-                      resolvePath(coordinator),
-                      this,
-                    ),
+                    child: buildPath(coordinator),
                   ),
                 ),
               ),

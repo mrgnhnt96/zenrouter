@@ -87,6 +87,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     defineLayout();
   }
 
+  // coverage:ignore-start
   @override
   void dispose() {
     super.dispose();
@@ -94,6 +95,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
       path.removeListener(notifyListeners);
     }
   }
+  // coverage:ignore-end
 
   /// The root (primary) navigation path.
   ///
@@ -448,8 +450,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// Builds the root widget (the primary navigator).
   ///
   /// Override to customize the root navigation structure.
-  Widget layoutBuilder(BuildContext context) =>
-      RouteLayout.buildPrimitivePath(NavigationPath, this, root, null);
+  Widget layoutBuilder(BuildContext context) => RouteLayout.buildRoot(this);
 
   /// Attempts to pop the nearest dynamic path.
   /// The [RouteGuard] logic is handled here.

@@ -11,6 +11,9 @@ part 'mixin.dart';
 part 'stack.dart';
 part 'transition.dart';
 
+/// Extension type for path keys.
+extension type const PathKey(String path) {}
+
 /// Mixin for stack paths that support mutable operations (push/pop).
 ///
 /// This provides standard implementations for [push], [pushOrMoveToTop], and [pop].
@@ -117,6 +120,10 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   /// The currently active route in this stack.
   T? get activeRoute;
 
+  /// The key of this path
+  ///
+  PathKey get pathKey;
+
   /// The current navigation stack as an unmodifiable list.
   ///
   /// The first element is the bottom of the stack (first route),
@@ -182,6 +189,12 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
     required String label,
     List<T>? stack,
   }) => NavigationPath._(label, stack ?? [], coordinator);
+
+  /// The key used to identify this type in [RouteLayout.layoutBuilderTable].
+  static const key = PathKey('NavigationPath');
+
+  @override
+  PathKey get pathKey => key;
 
   /// Removes a specific route from the stack (at any position).
   ///
@@ -260,6 +273,12 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
     required Coordinator coordinator,
     required String label,
   }) => IndexedStackPath._(stack, debugLabel: label, coordinator: coordinator);
+
+  /// The key used to identify this type in [RouteLayout.layoutBuilderTable].
+  static const key = PathKey('IndexedStackPath');
+
+  @override
+  PathKey get pathKey => key;
 
   int _activeIndex = 0;
 

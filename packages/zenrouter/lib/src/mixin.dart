@@ -64,9 +64,11 @@ typedef RouteLayoutConstructor<T extends RouteUnique> =
 /// It defines how its children are displayed and managed.
 mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   /// Identifier for the standard navigation path layout.
+  @Deprecated('Use [NavigationPath.key] instead')
   static const navigationPath = 'NavigationPath';
 
   /// Identifier for the indexed stack path layout.
+  @Deprecated('Use [IndexedStackPath.key] instead')
   static const indexedStackPath = 'IndexedStackPath';
 
   /// Registers a custom layout constructor.
@@ -83,8 +85,8 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   /// Table of registered layout builders.
   ///
   /// This maps layout identifiers to their widget builder functions.
-  static final Map<String, RouteLayoutBuilder> _layoutBuilderTable = {
-    navigationPath: (coordinator, path, layout) => NavigationStack(
+  static final Map<PathKey, RouteLayoutBuilder> _layoutBuilderTable = {
+    NavigationPath.key: (coordinator, path, layout) => NavigationStack(
       path: path as NavigationPath<RouteUnique>,
       navigatorKey: layout == null
           ? coordinator.routerDelegate.navigatorKey
@@ -110,7 +112,7 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
         }
       },
     ),
-    indexedStackPath: (coordinator, path, layout) => ListenableBuilder(
+    IndexedStackPath.key: (coordinator, path, layout) => ListenableBuilder(
       listenable: path,
       builder: (context, child) {
         final indexedStackPath = path as IndexedStackPath<RouteUnique>;
@@ -124,12 +126,14 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
 
   // coverage:ignore-start
   @Deprecated(
-    'Do not manage [layoutBuilderTable] manually. Instead, use [buildPrimitivePath] to access it and [definePrimitivePath] to register new builders.',
+    'Do not manage [layoutBuilderTable] manually. Instead, use [RouteLayout.buildPath] to access it and [defineLayout] to register new builders.',
   )
-  static Map<String, RouteLayoutBuilder> get layoutBuilderTable =>
+  static Map<PathKey, RouteLayoutBuilder> get layoutBuilderTable =>
       _layoutBuilderTable;
-  // coverage:ignore-end
 
+  @Deprecated(
+    'Use [buildPath] instead. This method won\'t work in minifier mode so migrate to [buildPath]. This will be removed in the next major version.',
+  )
   static Widget buildPrimitivePath<T extends RouteUnique>(
     Type type,
     Coordinator coordinator,
@@ -137,22 +141,42 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
     RouteLayout<T>? layout,
   ) {
     final typeString = type.toString().split('<').first;
-    if (!_layoutBuilderTable.containsKey(typeString)) {
+    final key = PathKey(typeString);
+
+    if (!_layoutBuilderTable.containsKey(key)) {
       throw UnimplementedError(
-        'You are not provide layout builder for [$typeString] yet. If you extends [StackPath] class you must register it at [RouteLayout.layoutBuilderTable] to use the [buildPrimitivePathByType]',
+        'You are not provide layout builder for [$typeString] yet. If you extends [StackPath] class you must register it at [RouteLayout.layoutBuilderTable] to use the [RouteLayout.buildPath]',
       );
     }
-    return _layoutBuilderTable[typeString]!(coordinator, path, layout);
+    return _layoutBuilderTable[key]!(coordinator, path, layout);
+  }
+  // coverage:ignore-end
+
+  static Widget buildRoot(Coordinator coordinator) =>
+      _layoutBuilderTable[coordinator.root.pathKey]!(
+        coordinator,
+        coordinator.root,
+        null,
+      );
+
+  /// Build the layout for this route.
+  Widget buildPath(Coordinator coordinator) {
+    final path = resolvePath(coordinator);
+
+    if (!_layoutBuilderTable.containsKey(path.pathKey)) {
+      throw UnimplementedError(
+        'You are not provide layout builder for [${path.pathKey.path}] yet. If you extends [StackPath] class you must register it by [RouteLayout.definePath] to use the [RouteLayout.buildPath]',
+      );
+    }
+    return _layoutBuilderTable[path.pathKey]!(coordinator, path, this);
   }
 
   // coverage:ignore-start
   /// Registers a custom layout builder.
   ///
   /// Use this to define how a specific layout type should be built.
-  static void definePrimitivePath(Type type, RouteLayoutBuilder builder) {
-    final typeString = type.toString().split('<').first;
-    _layoutBuilderTable[typeString] = builder;
-  }
+  static void definePath(PathKey key, RouteLayoutBuilder builder) =>
+      _layoutBuilderTable[key] = builder;
   // coverage:ignore-end
 
   /// Resolves the stack path for this layout.
@@ -167,17 +191,8 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   // coverage:ignore-end
 
   @override
-  Widget build(covariant Coordinator coordinator, BuildContext context) {
-    final path = resolvePath(coordinator);
-    final pureType = path.runtimeType.toString().split('<').first;
-    final builder = RouteLayout._layoutBuilderTable[pureType];
-    if (builder == null) {
-      throw UnimplementedError(
-        'If you define new kind of path layout you must register it at [RouteLayout.layoutTable]',
-      );
-    }
-    return builder(coordinator, path, this);
-  }
+  Widget build(covariant Coordinator coordinator, BuildContext context) =>
+      buildPath(coordinator);
 
   @override
   void onDidPop(Object? result, covariant Coordinator? coordinator) {

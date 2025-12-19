@@ -35,14 +35,7 @@ class CustomLayout extends AppRoute with RouteLayout<AppRoute> {
       body: switch (size.width) {
         < 600 => Column(
           children: [
-            Expanded(
-              child: RouteLayout.buildPrimitivePath(
-                IndexedStackPath,
-                coordinator,
-                path,
-                this,
-              ),
-            ),
+            Expanded(child: buildPath(coordinator)),
             Container(
               height: 60,
               color: Colors.yellow,

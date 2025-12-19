@@ -15,12 +15,7 @@ class HomeLayout extends AppRoute with RouteLayout<AppRoute> {
     final path = resolvePath(coordinator);
 
     return Scaffold(
-      body: RouteLayout.buildPrimitivePath<AppRoute>(
-        IndexedStackPath,
-        coordinator,
-        path,
-        this,
-      ),
+      body: buildPath(coordinator),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -57,14 +52,7 @@ class FeedLayout extends AppRoute with RouteLayout<AppRoute> {
 
   @override
   Widget build(AppCoordinator coordinator, BuildContext context) {
-    final path = resolvePath(coordinator);
-
-    return RouteLayout.buildPrimitivePath<AppRoute>(
-      NavigationPath,
-      coordinator,
-      path,
-      this,
-    );
+    return buildPath(coordinator);
   }
 }
 
@@ -75,18 +63,6 @@ class ProfileLayout extends AppRoute with RouteLayout<AppRoute> {
 
   @override
   Type? get layout => HomeLayout;
-
-  @override
-  Widget build(AppCoordinator coordinator, BuildContext context) {
-    final path = resolvePath(coordinator);
-
-    return RouteLayout.buildPrimitivePath<AppRoute>(
-      NavigationPath,
-      coordinator,
-      path,
-      this,
-    );
-  }
 }
 
 class PostList extends AppRoute {
