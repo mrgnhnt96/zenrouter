@@ -1201,7 +1201,7 @@ void main() {
       expect(find.byKey(const ValueKey('home')), findsOneWidget);
 
       // Navigate to shell child
-      coordinator.push(ShellChildRoute(id: 'child1'));
+      coordinator.navigate(ShellChildRoute(id: 'child1'));
       await tester.pumpAndSettle();
 
       // Verify we are at shell child
@@ -1215,6 +1215,23 @@ void main() {
       // Verify we are back at home and shell is gone
       expect(find.byKey(const ValueKey('home')), findsOneWidget);
       expect(find.byKey(const ValueKey('shell')), findsNothing);
+
+      // Pop
+      coordinator.navigate(ProfileRoute(userId: '123'));
+      await tester.pumpAndSettle();
+
+      // Verify we are back at home and shell is gone
+      expect(find.byKey(const ValueKey('home')), findsNothing);
+      expect(coordinator.root.stack.length, 2);
+
+      // Navigate to shell child
+      coordinator.navigate(ShellChildRoute(id: 'child1'));
+      await tester.pumpAndSettle();
+
+      // Verify we are at shell child
+      expect(find.byKey(const ValueKey('shell')), findsOneWidget);
+      expect(find.byKey(const ValueKey('shell-child-child1')), findsOneWidget);
+      expect(coordinator.root.stack.length, 3);
     });
   });
 

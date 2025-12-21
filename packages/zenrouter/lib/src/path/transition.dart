@@ -1,4 +1,4 @@
-part of 'path.dart';
+part of 'base.dart';
 
 /// Defines how a route should be displayed as a widget and wrapped in a page.
 ///

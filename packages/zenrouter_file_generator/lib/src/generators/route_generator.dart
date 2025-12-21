@@ -175,6 +175,7 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
     if (route.hasRedirect) mixins.add('RouteRedirect<$routeBase>');
     if (route.deepLinkStrategy != null) mixins.add('RouteDeepLink');
     if (route.hasTransition) mixins.add('RouteTransition');
+    if (route.hasQueries) mixins.add('RouteQueryParameters');
 
     final mixinStr = mixins.isNotEmpty ? ' with ${mixins.join(', ')}' : '';
 
@@ -198,10 +199,12 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
       }
     }
 
-    // Generate queries field for query parameters (only if declared)
+    // Generate queryNotifier field for query parameters (overrides mixin)
     if (route.hasQueries) {
-      buffer.writeln('  /// Query parameters from the URI.');
-      buffer.writeln('  final Map<String, String> queries;');
+      buffer.writeln('  @override');
+      buffer.writeln(
+        '  late final ValueNotifier<Map<String, String>> queryNotifier;',
+      );
       buffer.writeln();
     }
 
@@ -212,7 +215,7 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
           .join(', ');
       if (route.hasQueries) {
         buffer.writeln(
-          '  ${route.generatedBaseClassName}({$paramsList, this.queries = const {}});',
+          '  ${route.generatedBaseClassName}({$paramsList, Map<String, String> queries = const {}}) : queryNotifier = ValueNotifier(queries);',
         );
       } else {
         buffer.writeln('  ${route.generatedBaseClassName}({$paramsList});');
@@ -220,7 +223,7 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
     } else {
       if (route.hasQueries) {
         buffer.writeln(
-          '  ${route.generatedBaseClassName}({this.queries = const {}});',
+          '  ${route.generatedBaseClassName}({Map<String, String> queries = const {}}) : queryNotifier = ValueNotifier(queries);',
         );
       } else {
         buffer.writeln('  ${route.generatedBaseClassName}();');
@@ -228,13 +231,7 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
     }
     buffer.writeln();
 
-    // Generate query() method to get individual query parameters (only if declared)
-    if (route.hasQueries) {
-      buffer.writeln('  /// Get a query parameter by name.');
-      buffer.writeln('  /// Returns null if the parameter is not present.');
-      buffer.writeln('  String? query(String name) => queries[name];');
-      buffer.writeln();
-    }
+    // query() method is inherited from RouteQueryParameter mixin
 
     // Generate layout getter if route has a parent layout
     if (route.parentLayoutType != null) {
@@ -260,21 +257,15 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
     }
     buffer.writeln();
 
-    // Generate props for equality (include queries if declared)
+    // Generate props for equality (path params only, NOT queries)
+    // Queries are intentionally excluded so that updating query params
+    // doesn't trigger route changes - same path = same route identity
     buffer.writeln('  @override');
     if (route.hasDynamicParameters) {
       final propsItems = route.parameters.map((p) => p.name).join(', ');
-      if (route.hasQueries) {
-        buffer.writeln('  List<Object?> get props => [$propsItems, queries];');
-      } else {
-        buffer.writeln('  List<Object?> get props => [$propsItems];');
-      }
+      buffer.writeln('  List<Object?> get props => [$propsItems];');
     } else {
-      if (route.hasQueries) {
-        buffer.writeln('  List<Object?> get props => [queries];');
-      } else {
-        buffer.writeln('  List<Object?> get props => [];');
-      }
+      buffer.writeln('  List<Object?> get props => [];');
     }
 
     // Generate deep link strategy getter if needed
@@ -286,8 +277,81 @@ class RouteGenerator extends GeneratorForAnnotation<ZenRoute> {
       );
     }
 
+    // Generate query selector helpers
+    if (route.hasQueries && route.queries != null) {
+      for (final query in route.queries!) {
+        // Skip invalid query names or wildcards
+        if (query == '*' || !_isValidQueryParam(query)) continue;
+
+        final camelCaseName = _toCamelCase(query);
+        buffer.writeln();
+        buffer.writeln('  Widget ${camelCaseName}Builder<T>({');
+        buffer.writeln(
+          '    required T Function(String? $camelCaseName) selector,',
+        );
+        buffer.writeln(
+          '    required Widget Function(BuildContext, T $camelCaseName) builder,',
+        );
+        buffer.writeln('  }) => selectorBuilder<T>(');
+        buffer.writeln(
+          '    selector: (queries) => selector(queries[\'$query\']),',
+        );
+        buffer.writeln(
+          '    builder: (context, $camelCaseName) => builder(context, $camelCaseName),',
+        );
+        buffer.writeln('  );');
+      }
+    }
+
     buffer.writeln('}');
 
+    return buffer.toString();
+  }
+
+  bool _isValidQueryParam(String name) {
+    if (name.isEmpty) return false;
+    // Allow any non-empty string that doesn't look like garbage?
+    // Actually, we just want to ensure we can make a valid identifier out of it.
+    // Let's just ban '*' explicitly and allow most things, trusting _toCamelCase handles them.
+    if (name == '*') return false;
+
+    // We should probably still avoid completely weird characters that can't be part of a URL param easily
+    // or just trust the user.
+    // For now, let's just allow alphanumeric, underscore, AND hyphens.
+    for (var i = 0; i < name.length; i++) {
+      final char = name.codeUnitAt(i);
+      // Allow A-Z, a-z, 0-9, _, -
+      if (!((char >= 65 && char <= 90) || // A-Z
+          (char >= 97 && char <= 122) || // a-z
+          (char >= 48 && char <= 57) || // 0-9
+          char == 95 || // _
+          char == 45)) {
+        // -
+        return false;
+      }
+    }
+    return true;
+  }
+
+  String _toCamelCase(String str) {
+    if (str.isEmpty) return str;
+    final parts = str.split(RegExp(r'[_\-]+'));
+    if (parts.isEmpty) return str;
+
+    final buffer = StringBuffer();
+    // First part is lower case
+    buffer.write(parts.first.toLowerCase());
+
+    // Subsequent parts are capitalized
+    for (var i = 1; i < parts.length; i++) {
+      final part = parts[i];
+      if (part.isNotEmpty) {
+        buffer.write(part[0].toUpperCase());
+        if (part.length > 1) {
+          buffer.write(part.substring(1).toLowerCase());
+        }
+      }
+    }
     return buffer.toString();
   }
 

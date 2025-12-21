@@ -1,0 +1,144 @@
+part of '../path/base.dart';
+
+/// The base class for all navigation targets (routes).
+///
+/// A [RouteTarget] represents a destination in the app. It can hold state
+/// and parameters. Every screen, dialog, or navigable destination should
+/// extend this class.
+///
+/// ## Route Lifecycle
+///
+/// Routes go through distinct phases during their lifetime:
+///
+/// ```
+/// ┌─────────────────────────────────────────────────────────────────────┐
+/// │                        ROUTE LIFECYCLE                              │
+/// ├─────────────────────────────────────────────────────────────────────┤
+/// │  1. CREATION        → Route instance created (constructor called)   │
+/// │  2. REDIRECT CHECK  → RouteRedirect.redirect() called if applicable │
+/// │  3. PATH BINDING    → Route assigned to a StackPath (_path set)     │
+/// │  4. BUILD           → build() called to create the widget           │
+/// │  5. ACTIVE          → Route is visible and receiving interactions   │
+/// │  6. POP REQUEST     → User/system requests pop (guard consulted)    │
+/// │  7. POP COMPLETION  → onDidPop() + completeOnResult() called        │
+/// │  8. CLEANUP         → Route removed from path, _path set to null    │
+/// └─────────────────────────────────────────────────────────────────────┘
+/// ```
+///
+/// ## Internal State
+///
+/// Routes maintain internal state managed by the framework:
+/// - **`_path`**: The [StackPath] containing this route. Set during push.
+/// - **`_onResult`**: A [Completer] that resolves when the route is popped.
+/// - **`_resultValue`**: The result passed to [pop] before [onDidPop] is called.
+/// - **`isPopByPath`**: Whether the pop was initiated by [StackPath.pop].
+///
+/// ## Result Handling
+///
+/// Routes can return a result when popped:
+/// ```dart
+/// // Pushing with result
+/// final result = await coordinator.push<String>(SelectColorRoute());
+/// print('Selected: $result');
+///
+/// // Popping with result (in route or widget)
+/// coordinator.pop('blue');
+/// ```
+///
+/// ## Equality
+///
+/// Override [props] to include route parameters in equality checks:
+/// ```dart
+/// class ProductRoute extends RouteTarget with RouteUnique {
+///   final String productId;
+///   ProductRoute(this.productId);
+///
+///   @override
+///   List<Object?> get props => [productId];
+/// }
+/// ```
+abstract class RouteTarget extends Equatable {
+  /// Completer that resolves when this route is popped.
+  ///
+  /// The future completes with the result passed to [pop] or [completeOnResult].
+  /// This is set fresh each time the route is pushed.
+  Completer<Object?> _onResult = Completer();
+
+  @visibleForTesting
+  /// The completer for the result of the route. For testing purposes only.
+  /// DO NOT USE THIS MANUALLY. USE [completeOnResult] instead.
+  Completer<Object?> get onResult => _onResult;
+
+  /// The [StackPath] that currently contains this route.
+  ///
+  /// This is set when the route is pushed onto a path and cleared when popped.
+  /// Used internally to ensure routes are managed by the correct path.
+  StackPath? _path;
+
+  /// The result value to be returned when this route is popped.
+  ///
+  /// This is set by [StackPath.pop] before [onDidPop] is called, allowing
+  /// the widget tree to access the result during disposal.
+  Object? _resultValue;
+
+  /// Whether this route was popped by the path mechanism.
+  ///
+  /// When `true`, the pop was initiated by [NavigationPath.pop] or similar.
+  /// When `false`, the pop was initiated by the system (e.g., back button).
+  ///
+  /// This is used internally to prevent double removal from the stack.
+  bool isPopByPath = false;
+
+  /// Internal properties that are hardcoded and cannot be ignored.
+  ///
+  /// These are used for identity checks within the framework. Do not override.
+  /// See [props] for user-defined equality properties.
+  @override
+  List<Object?> get internalProps => [runtimeType, _path, _onResult];
+
+  /// The list of properties used for equality comparison.
+  ///
+  /// Override this to include route parameters in equality checks.
+  /// Two routes are equal if they have the same type and equal [props].
+  ///
+  /// **Example:**
+  /// ```dart
+  /// class UserRoute extends RouteTarget with RouteUnique {
+  ///   final int userId;
+  ///   UserRoute(this.userId);
+  ///
+  ///   @override
+  ///   List<Object?> get props => [userId];
+  /// }
+  /// ```
+  @override
+  List<Object?> get props => [];
+
+  @mustCallSuper
+  void onDidPop(Object? result, covariant Coordinator? coordinator) {
+    /// Handle force pop from navigator
+    if (isPopByPath == false && _path?.stack.contains(this) == true) {
+      if (_path case StackMutatable path) {
+        path.remove(this);
+      }
+    }
+  }
+
+  /// Completes the route's result future.
+  ///
+  /// This is called when the route is popped with a result.
+  void completeOnResult(
+    Object? result,
+    covariant Coordinator? coordinator, [
+    bool failSilent = false,
+  ]) {
+    if (failSilent && _onResult.isCompleted) {
+      _resultValue = null;
+      _path = null;
+      return;
+    }
+    _onResult.complete(result);
+    _resultValue = result;
+    _path = null;
+  }
+}

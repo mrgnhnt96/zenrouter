@@ -11,7 +11,9 @@ class MyRoute extends RouteTarget    // Base class (required)
     with RouteUnique                 // For coordinator (optional)
     with RouteGuard                  // Prevent navigation (optional)
     with RouteRedirect               // Conditional routing (optional)
-    with RouteDeepLink {             // Custom deep link handling (optional)
+    with RouteRedirect               // Conditional routing (optional)
+    with RouteDeepLink               // Custom deep link handling (optional)
+    with RouteQueryParameters {      // Efficient query handling (optional)
   // Your route implementation
 }
 ```
@@ -22,7 +24,9 @@ Each mixin adds specific capabilities:
 - **RouteTransition** - Custom page transitions
 - **RouteGuard** - Prevents unwanted navigation
 - **RouteRedirect** - Redirects to different routes
+- **RouteRedirect** - Redirects to different routes
 - **RouteDeepLink** - Custom deep link handling
+- **RouteQueryParameters** - Efficiently handle query parameters
 
 ### Decision Tree
 
@@ -51,7 +55,11 @@ Which mixins do I need?
 │
 └─ Custom deep link handling?
    ├─ Yes → Add RouteDeepLink ✓
-   └─ No → Done!
+   └─ No → Continue
+│
+└─ Need query parameters with granular updates?
+   ├─ Yes → Add RouteQueryParameters ✓
+   └─ Done!
 ```
 
 
@@ -1018,6 +1026,89 @@ class TabLayout extends RouteTarget with RouteLayout {...}
 class TabLayout extends RouteTarget with RouteUnique, RouteLayout {...}
 // Works with Coordinator
 ```
+
+---
+
+### RouteQueryParameters
+
+Efficiently handles query parameters by allowing granular UI rebuilds. This mixin provides a `ValueNotifier` for query parameters, enabling parts of your UI to rebuild when specific queries change without rebuilding the entire route or triggering navigation transitions.
+
+**Required when:**
+- You have complex routes with filters, sorting, or pagination
+- You want to update the URL without navigation
+- You need high performance for frequent parameter updates
+
+#### API
+
+```dart
+mixin RouteQueryParameters on RouteUnique {
+  // The notifier for query parameters
+  ValueNotifier<Map<String, String>> get queryNotifier;
+
+  // Current query parameters
+  Map<String, String> get queries;
+
+  // Get a specific query
+  String? query(String name);
+
+  // Update queries and sync URL
+  void updateQueries(
+    covariant Coordinator coordinator, {
+    required Map<String, String> queries,
+  });
+
+  // Build widgets that rebuild only when specific queries change
+  Widget selectorBuilder<T>({
+    required T Function(Map<String, String> queries) selector,
+    required Widget Function(BuildContext context, T value) builder,
+  });
+}
+```
+
+#### Example: Pagination and Filtering
+
+```dart
+class CollectionListRoute extends AppRoute with RouteQueryParameters {
+  @override
+  late final ValueNotifier<Map<String, String>> queryNotifier;
+
+  CollectionListRoute({Map<String, String> queries = const {}})
+    : queryNotifier = ValueNotifier(queries);
+
+  @override
+  Widget build(AppCoordinator coordinator, BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          // Only rebuilds when 'filter' changes
+          selectorBuilder(
+            selector: (q) => q['filter'] ?? 'all',
+            builder: (context, filter) => Text('Filter: $filter'),
+          ),
+          
+          // Only rebuilds when 'page' changes
+          selectorBuilder(
+            selector: (q) => int.tryParse(q['page'] ?? '1') ?? 1,
+            builder: (context, page) => Text('Page: $page'),
+          ),
+
+          ElevatedButton(
+            onPressed: () {
+              updateQueries(
+                coordinator,
+                queries: {...queries, 'page': '2'},
+              );
+            },
+            child: const Text('Go to Page 2'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+---
 
 ## See Also
 

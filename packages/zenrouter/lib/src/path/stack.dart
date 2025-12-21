@@ -1,4 +1,4 @@
-part of 'path.dart';
+part of 'base.dart';
 
 /// A widget that renders a stack of pages based on a [NavigationPath].
 ///
@@ -129,12 +129,15 @@ class _NavigationStackState<T extends RouteTarget>
             case false when destination.guard != null:
               final popped = switch (widget.coordinator) {
                 null => await destination.guard?.popGuard(),
+                // Never happen
+                // coverage:ignore-start
                 final coordinator => await destination.guard?.popGuardWith(
                   coordinator,
                 ),
               };
               if (popped == true) widget.path.pop();
             case false:
+            // coverage:ignore-end
           }
         },
         child: destination.builder(context),

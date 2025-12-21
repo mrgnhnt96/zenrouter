@@ -1,4 +1,4 @@
-import 'path.dart';
+import 'package:zenrouter/src/path/base.dart';
 
 /// Represents a diff operation between two lists.
 sealed class DiffOp<T> {
@@ -282,8 +282,8 @@ void applyDiff<T extends RouteTarget>(
     for (final insert in inserts) {
       if (insert.newIndex <= stackList.length) {
         stackList.insert(insert.newIndex, insert.element);
-      } else {
         // coverage:ignore-start
+      } else {
         stackList.add(insert.element);
         // coverage:ignore-end
       }

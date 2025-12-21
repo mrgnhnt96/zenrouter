@@ -1,3 +1,9 @@
+## 0.4.5
+- **Feat**: Add `RouteQueryParameters` mixin for targeted query parameter updates using `ValueNotifier`.
+- **Fix**: Ensure `path` is set for `RouteTarget` when initial `IndexedStackPath`.
+- **Fix**: Ensure `layout` is resolve correct if they under deeper stack.
+- **Refactor**: Refactor folder structure and test folder structure to be more organized.
+
 ## 0.4.4
 - **Feat**: New ZenRoute Logo!
 - **Docs**: Improve document and update outdate example

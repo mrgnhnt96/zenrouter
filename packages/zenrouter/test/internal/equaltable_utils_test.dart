@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zenrouter/src/equaltable_utils.dart' as eq;
-import 'package:zenrouter/src/path.dart';
+import 'package:zenrouter/src/internal/equatable.dart' as eq;
+import 'package:zenrouter/zenrouter.dart';
 
 // Test route implementations
 class TestRoute extends RouteTarget {

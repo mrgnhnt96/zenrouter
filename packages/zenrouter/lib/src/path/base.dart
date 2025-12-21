@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'diff.dart';
-import 'coordinator.dart';
-import 'equaltable_utils.dart';
+import 'package:zenrouter/src/internal/diff.dart';
+import 'package:zenrouter/src/internal/equatable.dart';
+import 'package:zenrouter/zenrouter.dart';
 
-part 'mixin.dart';
-part 'stack.dart';
 part 'transition.dart';
+part 'stack.dart';
+part 'navigation.dart';
+part 'indexed.dart';
+part '../mixin/target.dart';
+part '../mixin/guard.dart';
 
 /// A type-safe identifier for [StackPath] types.
 ///
@@ -112,6 +115,26 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
     element._resultValue = result;
     notifyListeners();
     return true;
+  }
+
+  /// Removes a specific route from the stack at any position.
+  ///
+  /// **Difference from [pop]:**
+  /// - [remove]: Bypasses guards, can remove at any index, no result returned
+  /// - [pop]: Respects [RouteGuard], only removes top route, returns result
+  ///
+  /// **When to use:**
+  /// - Removing routes that were force-closed by the system
+  /// - Cleaning up routes during navigation state changes
+  /// - Internal framework operations
+  ///
+  /// **Avoid when:**
+  /// - User-initiated back navigation (use [pop] instead)
+  /// - You need to respect guards
+  void remove(T element) {
+    element._path = null;
+    final removed = _stack.remove(element);
+    if (removed) notifyListeners();
   }
 }
 
@@ -252,217 +275,6 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   @override
   String toString() =>
       '${debugLabel ?? hashCode} [${runtimeType.toString().split('Path').first}]';
-}
-
-/// A mutable stack path for standard navigation.
-///
-/// Supports pushing and popping routes. Used for the main navigation stack
-/// and modal flows.
-class NavigationPath<T extends RouteTarget> extends StackPath<T>
-    with StackMutatable<T> {
-  NavigationPath._([
-    String? debugLabel,
-    List<T>? stack,
-    Coordinator? coordinator,
-  ]) : super(stack ?? [], debugLabel: debugLabel, coordinator: coordinator);
-
-  // coverage:ignore-start
-  /// Creates a [NavigationPath] with an optional initial stack.
-  ///
-  /// This is deprecated. Use [NavigationPath.create] or [NavigationPath.createWith] instead.
-  @Deprecated('Use NavigationPath.create or NavigationPath.createWith instead')
-  factory NavigationPath([
-    String? debugLabel,
-    List<T>? stack,
-    Coordinator? coordinator,
-  ]) => NavigationPath._(debugLabel, stack, coordinator);
-  // coverage:ignore-end
-
-  /// Creates a [NavigationPath] with an optional initial stack.
-  ///
-  /// This is the standard way to create a mutable navigation stack.
-  factory NavigationPath.create({
-    String? label,
-    List<T>? stack,
-    Coordinator? coordinator,
-  }) => NavigationPath._(label, stack ?? [], coordinator);
-
-  /// Creates a [NavigationPath] associated with a [Coordinator].
-  ///
-  /// This constructor binds the path to a specific coordinator, allowing it to
-  /// interact with the coordinator for navigation actions.
-  factory NavigationPath.createWith({
-    required Coordinator coordinator,
-    required String label,
-    List<T>? stack,
-  }) => NavigationPath._(label, stack ?? [], coordinator);
-
-  /// The key used to identify this type in [RouteLayout.definePath].
-  static const key = PathKey('NavigationPath');
-
-  /// NavigationPath key. This is used to identify this type in [RouteLayout.definePath].
-  @override
-  PathKey get pathKey => key;
-
-  /// Removes a specific route from the stack at any position.
-  ///
-  /// **Difference from [pop]:**
-  /// - [remove]: Bypasses guards, can remove at any index, no result returned
-  /// - [pop]: Respects [RouteGuard], only removes top route, returns result
-  ///
-  /// **When to use:**
-  /// - Removing routes that were force-closed by the system
-  /// - Cleaning up routes during navigation state changes
-  /// - Internal framework operations
-  ///
-  /// **Avoid when:**
-  /// - User-initiated back navigation (use [pop] instead)
-  /// - You need to respect guards
-  void remove(T element) {
-    element._path = null;
-    final removed = _stack.remove(element);
-    if (removed) notifyListeners();
-  }
-
-  @override
-  void reset() {
-    for (final route in _stack) {
-      route.completeOnResult(null, null, true);
-    }
-    _stack.clear();
-  }
-
-  @override
-  T? get activeRoute => _stack.lastOrNull;
-
-  @override
-  Future<void> activateRoute(T route) async {
-    reset();
-    push(route);
-  }
-}
-
-/// A fixed stack path for indexed navigation (like tabs).
-///
-/// Routes are pre-defined and cannot be added or removed. Navigation switches
-/// the active index.
-class IndexedStackPath<T extends RouteTarget> extends StackPath<T> {
-  IndexedStackPath._(super.stack, {super.debugLabel, super.coordinator})
-    : assert(stack.isNotEmpty, 'Read-only path must have at least one route'),
-      super() {
-    for (final path in stack) {
-      /// Set the output of every route to null since this cannot pop
-      path.completeOnResult(null, null);
-    }
-  }
-
-  // coverage:ignore-start
-  /// Creates an [IndexedStackPath] with a fixed list of routes.
-  ///
-  /// This is deprecated. Use [IndexedStackPath.create] or [IndexedStackPath.createWith] instead.
-  @Deprecated(
-    'Use IndexedStackPath.create or IndexedStackPath.createWith instead',
-  )
-  factory IndexedStackPath(
-    List<T> stack, [
-    String? debugLabel,
-    Coordinator? coordinator,
-  ]) => IndexedStackPath._(
-    stack,
-    debugLabel: debugLabel,
-    coordinator: coordinator,
-  );
-  // coverage:ignore-end
-
-  /// Creates an [IndexedStackPath] with a fixed list of routes.
-  ///
-  /// This is the standard way to create a fixed stack for indexed navigation.
-  factory IndexedStackPath.create(
-    List<T> stack, {
-    String? label,
-    Coordinator? coordinator,
-  }) => IndexedStackPath._(stack, debugLabel: label, coordinator: coordinator);
-
-  /// Creates an [IndexedStackPath] associated with a [Coordinator].
-  ///
-  /// This constructor binds the path to a specific coordinator, allowing it to
-  /// interact with the coordinator for navigation actions.
-  factory IndexedStackPath.createWith(
-    List<T> stack, {
-    required Coordinator coordinator,
-    required String label,
-  }) => IndexedStackPath._(stack, debugLabel: label, coordinator: coordinator);
-
-  /// The key used to identify this type in [RouteLayout.definePath].
-  static const key = PathKey('IndexedStackPath');
-
-  /// IndexedStackPath key. This is used to identify this type in [RouteLayout.definePath].
-  @override
-  PathKey get pathKey => key;
-
-  int _activeIndex = 0;
-
-  // coverage:ignore-start
-  /// The index of the currently active path in the stack.
-  @Deprecated('Use `activeIndex` instead. This will be removed in 1.0.0')
-  int get activePathIndex => _activeIndex;
-  // coverage:ignore-end
-
-  /// The index of the currently active path in the stack.
-  int get activeIndex => _activeIndex;
-
-  @override
-  T get activeRoute => stack[activeIndex];
-
-  /// Switches the active route to the one at [index].
-  ///
-  /// Handles guards on the current route and redirects on the new route.
-  Future<void> goToIndexed(int index) async {
-    if (index >= stack.length) throw StateError('Index out of bounds');
-
-    /// Ignore already active index
-    if (index == _activeIndex) return;
-
-    final oldIndex = _activeIndex;
-    final oldRoute = stack[oldIndex];
-    if (oldRoute is RouteGuard) {
-      final guard = oldRoute as RouteGuard;
-      final canPop = await switch (coordinator) {
-        null => guard.popGuard(),
-        final coordinator => guard.popGuardWith(coordinator),
-      };
-      if (!canPop) return;
-    }
-    var newRoute = stack[index];
-    while (newRoute is RouteRedirect<T>) {
-      final redirectTo = await (newRoute as RouteRedirect<T>).redirect();
-      if (redirectTo == null) return;
-      newRoute = redirectTo;
-    }
-
-    final newIndex = stack.indexOf(newRoute);
-    if (newIndex == -1 && coordinator != null) {
-      coordinator!.recover(newRoute as RouteUnique);
-    } else {
-      _activeIndex = newIndex;
-      notifyListeners();
-    }
-  }
-
-  @override
-  Future<void> activateRoute(T route) async {
-    final index = stack.indexOf(route);
-    route.completeOnResult(null, null, true);
-    if (index == _activeIndex) return;
-    if (index == -1) throw StateError('Route not found');
-    await goToIndexed(index);
-  }
-
-  @override
-  void reset() {
-    _activeIndex = 0;
-    notifyListeners();
-  }
 }
 
 /// Callback that builds a [Page] from a route and child widget.

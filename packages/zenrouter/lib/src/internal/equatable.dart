@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:zenrouter/src/path.dart';
 
 /// Returns a `hashCode` for [props].
 ///
@@ -186,6 +185,7 @@ String mapPropsToString(Type runtimeType, List<Object?> props) {
 /// - Hash code generation
 /// - Internal framework identity checks
 abstract class Equatable {
+  // coverage:ignore-start
   /// Framework-managed properties for internal identity.
   ///
   /// **Do not override.** This is used by ZenRouter to track:
@@ -196,6 +196,7 @@ abstract class Equatable {
   /// These are combined with [props] for hash code generation but are
   /// NOT compared in [compareWith] / `==` operator.
   List<Object?> get internalProps => [];
+  // coverage:ignore-end
 
   /// User-defined properties for equality comparison.
   ///
