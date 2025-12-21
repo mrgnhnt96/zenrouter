@@ -1,3 +1,6 @@
+## 0.4.6
+- Downgrade `analyzer` to `^8.0.0` for compatibility.
+
 ## 0.4.5
 - Support new `RouteQueryParameters` and new dot notation flavor in naming convention.
 
