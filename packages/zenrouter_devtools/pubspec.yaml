@@ -1,6 +1,6 @@
 name: zenrouter_devtools
 description: "Deeplink, Inspection, and Debugging Devtools for ZenRouter"
-version: 0.4.1
+version: 0.4.2
 homepage: https://github.com/definev/zenrouter/tree/main/packages/zenrouter_devtools
 
 environment:

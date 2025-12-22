@@ -1,3 +1,6 @@
+## 0.4.2
+- **Docs**: Update README
+
 ## 0.4.1
 - **Docs**: Update README and add screenshots
 
