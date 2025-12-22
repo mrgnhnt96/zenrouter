@@ -161,7 +161,6 @@ class MissingTabRoute extends ErrorTestRoute {
   List<Object?> get props => [];
 }
 
-
 /// Test coordinator
 class ErrorTestCoordinator extends Coordinator<ErrorTestRoute> {
   late final UnregisteredCustomPath<ErrorTestRoute> testStack =
