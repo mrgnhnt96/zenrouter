@@ -1,6 +1,10 @@
 <div align="center">
 
-
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/definev/zenrouter/blob/main/assets/zenrouter_dark.png?raw=true">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/definev/zenrouter/blob/main/assets/zenrouter_light.png?raw=true">
+  <img alt="ZenRouter Logo" src="https://github.com/definev/zenrouter/blob/main/assets/zenrouter_light.png?raw=true">
+</picture>
 
 # ZenRouter DevTools
 
