@@ -32,6 +32,8 @@ mixin RouteUnique on RouteTarget {
     if (layout == null) return null;
     final layouts = coordinator.activeLayouts;
     if (layouts.isEmpty && layout == null) return null;
+    
+    // Find existing layout or create new one
     RouteLayout? resolvedLayout;
     for (var i = layouts.length - 1; i >= 0; i -= 1) {
       final l = layouts[i];

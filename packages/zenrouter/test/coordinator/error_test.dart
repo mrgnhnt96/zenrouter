@@ -761,19 +761,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // In production mode (assertions disabled), navigate should fail gracefully
-        // This simulates what would happen if someone bypassed the assertion
-        // The test runs with assertions enabled, so we test the guard in navigate()
+        // Test the guard in navigate() that prevents crashes when route is not in IndexedStackPath
+        // Even if the assertion in resolveLayout is bypassed, navigate should handle this gracefully
         
         // First establish the IndexedStackPath layout
         coordinator.push(NormalIndexedStackLayout());
         await tester.pumpAndSettle();
 
         // Now directly call navigate with a route not in the stack
-        // This would bypass the resolveLayout check in some scenarios
         final missingRoute = MissingTabRoute();
         
-        // Create the layout manually to bypass resolveLayout assertion
+        // Create the layout manually to verify route is not in the stack
         final layout = NormalIndexedStackLayout();
         final path = layout.resolvePath(coordinator);
         
