@@ -16,6 +16,10 @@ topics:
   - deep-linking
   - web
 
+screenshots:
+  - description: "Zen Logo"
+    path: screenshots/logo_light.png
+
 environment:
   sdk: ^3.8.0
   flutter: ">=3.0.0"
