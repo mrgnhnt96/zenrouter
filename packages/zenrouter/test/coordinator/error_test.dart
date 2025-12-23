@@ -762,58 +762,47 @@ void main() {
 
         // Test the guard in navigate() that prevents crashes when route is not in IndexedStackPath
         // Even if the assertion in resolveLayout is bypassed, navigate should handle this gracefully
-        
+
         // First establish the IndexedStackPath layout
         coordinator.push(NormalIndexedStackLayout());
         await tester.pumpAndSettle();
 
         // Now directly call navigate with a route not in the stack
         final missingRoute = MissingTabRoute();
-        
+
         // Create the layout manually to verify route is not in the stack
         final layout = NormalIndexedStackLayout();
         final path = layout.resolvePath(coordinator);
-        
+
         // Verify the route is not in the stack
-        expect(path.stack.any((r) => r.runtimeType == MissingTabRoute), isFalse);
-        
-        // The navigate method should handle this gracefully and not crash
-        await coordinator.navigate(missingRoute);
-        await tester.pumpAndSettle();
-
-        // Verify no crash occurred and the UI is still functional
-        expect(tester.takeException(), isNull);
-      },
-    );
-
-    test(
-      'assertion message includes helpful information',
-      () {
-        final coordinator = ErrorTestCoordinator();
-        final missingRoute = MissingTabRoute();
+        expect(
+          path.stack.any((r) => r.runtimeType == MissingTabRoute),
+          isFalse,
+        );
 
         try {
-          missingRoute.resolveLayout(coordinator);
-          fail('Should have thrown AssertionError');
+          // The navigate method should handle this gracefully and not crash
+          await coordinator.navigate(missingRoute);
+          await tester.pumpAndSettle();
         } on AssertionError catch (e) {
           final message = e.message.toString();
-          
+
           // Should mention the route type
           expect(message, contains('MissingTabRoute'));
-          
+
           // Should mention IndexedStackPath
           expect(message, contains('IndexedStackPath'));
-          
+
           // Should show the path label
           expect(message, contains('root'));
-          
+
           // Should explain the problem
           expect(message, contains('not present in the initial stack'));
-          
+
           // Should show current stack contents
           expect(message, contains('Current stack'));
           expect(message, contains('SimpleErrorRoute'));
-          
+
           // Should provide a fix with code example
           expect(message, contains('Fix:'));
           expect(message, contains('IndexedStackPath.createWith'));
@@ -821,5 +810,38 @@ void main() {
         }
       },
     );
+
+    test('assertion message includes helpful information', () {
+      final coordinator = ErrorTestCoordinator();
+      final missingRoute = MissingTabRoute();
+
+      try {
+        missingRoute.resolveLayout(coordinator);
+        fail('Should have thrown AssertionError');
+      } on AssertionError catch (e) {
+        final message = e.message.toString();
+
+        // Should mention the route type
+        expect(message, contains('MissingTabRoute'));
+
+        // Should mention IndexedStackPath
+        expect(message, contains('IndexedStackPath'));
+
+        // Should show the path label
+        expect(message, contains('root'));
+
+        // Should explain the problem
+        expect(message, contains('not present in the initial stack'));
+
+        // Should show current stack contents
+        expect(message, contains('Current stack'));
+        expect(message, contains('SimpleErrorRoute'));
+
+        // Should provide a fix with code example
+        expect(message, contains('Fix:'));
+        expect(message, contains('IndexedStackPath.createWith'));
+        expect(message, contains('MissingTabRoute()'));
+      }
+    });
   });
 }

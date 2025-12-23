@@ -32,7 +32,7 @@ mixin RouteUnique on RouteTarget {
     if (layout == null) return null;
     final layouts = coordinator.activeLayouts;
     if (layouts.isEmpty && layout == null) return null;
-    
+
     // Find existing layout or create new one
     RouteLayout? resolvedLayout;
     for (var i = layouts.length - 1; i >= 0; i -= 1) {
@@ -49,7 +49,9 @@ mixin RouteUnique on RouteTarget {
     assert(() {
       final path = resolvedLayout!.resolvePath(coordinator);
       if (path is IndexedStackPath) {
-        final routeInStack = path.stack.any((r) => r.runtimeType == runtimeType);
+        final routeInStack = path.stack.any(
+          (r) => r.runtimeType == runtimeType,
+        );
         if (!routeInStack) {
           throw AssertionError(
             'Route [$runtimeType] uses an IndexedStackPath layout but is not present in the initial stack.\n'
