@@ -483,6 +483,21 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
         }
 
         // Guard: If route is not in the IndexedStackPath, fail gracefully
+        assert(() {
+          if (routeIndex == -1) {
+            throw AssertionError(
+              'Route [${route.runtimeType}] not found in IndexedStackPath [${routePath.debugLabel ?? 'unlabeled'}].\n'
+              'Current stack: ${routePath.stack.map((r) => r.runtimeType).toList()}\n\n'
+              'Fix: Add an instance of [${route.runtimeType}] to the IndexedStackPath when creating it:\n'
+              '  IndexedStackPath.createWith(\n'
+              '    [...existing routes..., ${route.runtimeType}()],\n'
+              '    coordinator: this,\n'
+              '    label: \'${routePath.debugLabel ?? 'your-label'}\',\n'
+              '  )',
+            );
+          }
+          return true;
+        }());
         if (routeIndex == -1) {
           // Route not found in IndexedStackPath - restore the URL to current state
           notifyListeners();

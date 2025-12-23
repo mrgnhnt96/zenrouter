@@ -43,25 +43,30 @@ mixin RouteUnique on RouteTarget {
       }
     }
     resolvedLayout ??= createLayout(coordinator);
-    
+
     // Validate that routes using IndexedStackPath are in the initial stack
-    final path = resolvedLayout.resolvePath(coordinator);
-    if (path is IndexedStackPath) {
-      final routeInStack = path.stack.any((r) => r.runtimeType == runtimeType);
-      assert(
-        routeInStack,
-        'Route [$runtimeType] uses an IndexedStackPath layout but is not present in the initial stack.\n'
-        'IndexedStackPath: ${path.debugLabel ?? 'unlabeled'}\n'
-        'Current stack: ${path.stack.map((r) => r.runtimeType).toList()}\n\n'
-        'Fix: Add an instance of [$runtimeType] to the IndexedStackPath when creating it:\n'
-        '  IndexedStackPath.createWith(\n'
-        '    [...existing routes..., $runtimeType()],\n'
-        '    coordinator: this,\n'
-        '    label: \'${path.debugLabel ?? 'your-label'}\',\n'
-        '  )',
-      );
-    }
-    
+    // Using assert with closure to ensure all validation logic is removed in production
+    assert(() {
+      final path = resolvedLayout!.resolvePath(coordinator);
+      if (path is IndexedStackPath) {
+        final routeInStack = path.stack.any((r) => r.runtimeType == runtimeType);
+        if (!routeInStack) {
+          throw AssertionError(
+            'Route [$runtimeType] uses an IndexedStackPath layout but is not present in the initial stack.\n'
+            'IndexedStackPath: ${path.debugLabel ?? 'unlabeled'}\n'
+            'Current stack: ${path.stack.map((r) => r.runtimeType).toList()}\n\n'
+            'Fix: Add an instance of [$runtimeType] to the IndexedStackPath when creating it:\n'
+            '  IndexedStackPath.createWith(\n'
+            '    [...existing routes..., $runtimeType()],\n'
+            '    coordinator: this,\n'
+            '    label: \'${path.debugLabel ?? 'your-label'}\',\n'
+            '  )',
+          );
+        }
+      }
+      return true;
+    }());
+
     return resolvedLayout;
   }
 
