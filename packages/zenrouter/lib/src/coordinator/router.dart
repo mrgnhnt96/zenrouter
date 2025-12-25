@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:zenrouter/src/coordinator/restoration.dart';
 import 'package:zenrouter/src/mixin/deeplink.dart';
 import 'package:zenrouter/src/mixin/unique.dart';
 
@@ -43,8 +44,21 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   @override
   Uri? get currentConfiguration => coordinator.currentUri;
 
+  String get coordinatorRestorationId =>
+      '_${coordinator.rootRestorationId}_coordinator_restorable';
+
+  final GlobalKey<CoordinatorRestorableState> _coordinatorRestorableKey =
+      GlobalKey();
+
   @override
-  Widget build(BuildContext context) => coordinator.layoutBuilder(context);
+  Widget build(BuildContext context) {
+    return CoordinatorRestorable(
+      key: _coordinatorRestorableKey,
+      coordinator: coordinator,
+      restorationId: coordinatorRestorationId,
+      child: coordinator.layoutBuilder(context),
+    );
+  }
 
   /// Handles the initial route path.
   ///
@@ -56,11 +70,10 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   Future<void> setInitialRoutePath(Uri configuration) async {
     if (initialRoute != null &&
         (configuration.path == '/' || configuration.path == '')) {
-      coordinator.recover(initialRoute!);
-      return;
+      setNewRoutePath(initialRoute!.toUri());
+    } else {
+      setNewRoutePath(configuration);
     }
-    final route = await coordinator.parseRouteFromUri(configuration);
-    coordinator.recover(route);
   }
 
   /// Handles browser navigation events (back/forward buttons, URL changes).
@@ -102,6 +115,32 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   }
 
   @override
+  Future<void> setRestoredRoutePath(Uri configuration) async {
+    final coordinatorRestoration = _coordinatorRestorableKey.currentState!;
+    final bucket = coordinatorRestoration.bucket!;
+    final activeRoute = bucket.read('_activeRoute');
+    if (activeRoute is String) {
+      final sanitizedConfiguration = configuration.replace(
+        host: '',
+        scheme: '',
+      );
+      final activeRouteUri = Uri.tryParse(
+        activeRoute,
+      )?.replace(host: '', scheme: '');
+      if (sanitizedConfiguration == activeRouteUri) {
+        return;
+      }
+
+      /// Clear all restoration data since it's no longer valid
+      for (final path in coordinator.paths) {
+        path.reset();
+      }
+    }
+
+    return setNewRoutePath(configuration);
+  }
+
+  @override
   Future<bool> popRoute() async {
     final result = await coordinator.tryPop();
     return result ?? false;
@@ -113,3 +152,5 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
     super.dispose();
   }
 }
+
+enum RoutePathState { initial, newRoute, restored }
