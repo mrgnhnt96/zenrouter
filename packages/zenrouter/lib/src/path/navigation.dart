@@ -5,7 +5,7 @@ part of 'base.dart';
 /// Supports pushing and popping routes. Used for the main navigation stack
 /// and modal flows.
 class NavigationPath<T extends RouteTarget> extends StackPath<T>
-    with StackMutatable<T> {
+    with StackMutatable<T>, RestorablePath {
   NavigationPath._([
     String? debugLabel,
     List<T>? stack,
@@ -65,5 +65,17 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
   Future<void> activateRoute(T route) async {
     reset();
     push(route);
+  }
+
+  @override
+  void restore(dynamic data) {
+    final rawStack = (data as List).cast<RouteTarget>();
+
+    _stack.clear();
+    for (final route in rawStack) {
+      route.isPopByPath = false;
+      route._path = this;
+      _stack.add(route as T);
+    }
   }
 }

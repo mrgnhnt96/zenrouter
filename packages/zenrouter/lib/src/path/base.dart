@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:zenrouter/src/internal/diff.dart';
 import 'package:zenrouter/src/internal/equatable.dart';
+import 'package:zenrouter/src/path/restoration.dart';
 import 'package:zenrouter/zenrouter.dart';
 
 part 'transition.dart';
@@ -34,7 +35,7 @@ part '../mixin/guard.dart';
 ///   PathKey get pathKey => key;
 /// }
 /// ```
-extension type const PathKey(String path) {}
+extension type const PathKey(String key) {}
 
 /// Mixin for stack paths that support mutable operations (push/pop).
 ///
