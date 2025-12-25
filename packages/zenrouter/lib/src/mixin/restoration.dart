@@ -54,10 +54,13 @@ mixin RouteRestorable<T extends RouteTarget> on RouteTarget {
   RestorationStrategy get strategy => RestorationStrategy.unique;
 
   RestorableConverter<T> get converter => throw UnimplementedError();
+
+  @override
+  String get restorationId;
 }
 
 typedef RestoratableConverterConstructor<T extends Object> =
-    RestorableConverter<T> Function(Coordinator coordinator);
+    RestorableConverter<T> Function();
 
 abstract class RestorableConverter<T extends Object> {
   const RestorableConverter();
@@ -70,9 +73,9 @@ abstract class RestorableConverter<T extends Object> {
     RestoratableConverterConstructor<T> constructor,
   ) => _converterTable[key] = constructor;
 
-  static RestorableConverter<T>? buildConverter<T extends Object>(String key) {
+  static RestorableConverter? buildConverter(String key) {
     if (!_converterTable.containsKey(key)) return null;
-    return _converterTable[key] as RestorableConverter<T>;
+    return _converterTable[key]!();
   }
 
   String get key;

@@ -21,10 +21,21 @@ class Bookmark extends AppRoute {
       BookmarkView();
 }
 
-class BookmarkDetail extends AppRoute {
-  BookmarkDetail({required this.id});
+class BookmarkDetail extends AppRoute with RouteRestorable<BookmarkDetail> {
+  BookmarkDetail({required this.id, this.name});
 
   final String id;
+  final String? name;
+
+  @override
+  String get restorationId => 'bookmark_${id}_$name';
+
+  @override
+  RestorationStrategy get strategy => RestorationStrategy.converter;
+
+  @override
+  RestorableConverter<BookmarkDetail> get converter =>
+      const BookmarkDetailConverter();
 
   @override
   List<Object?> get props => [id];
@@ -34,10 +45,40 @@ class BookmarkDetail extends AppRoute {
 
   @override
   Widget build(Coordinator<AppRoute> coordinator, BuildContext context) =>
-      BookmarkDetailView(id: id);
+      BookmarkDetailView(id: id, name: name);
+}
+
+class BookmarkDetailConverter extends RestorableConverter<BookmarkDetail> {
+  const BookmarkDetailConverter();
+
+  static const staticKey = 'bookmark_detail';
+
+  @override
+  String get key => staticKey;
+
+  @override
+  Map<String, dynamic> serialize(BookmarkDetail route) {
+    return {'id': route.id, 'name': route.name};
+  }
+
+  @override
+  BookmarkDetail deserialize(Map<String, dynamic> data) {
+    return BookmarkDetail(
+      id: data['id'] as String,
+      name: data['name'] as String?,
+    );
+  }
 }
 
 class AppCoodinator extends Coordinator<AppRoute> {
+  @override
+  void defineConverter() {
+    RestorableConverter.defineConverter(
+      BookmarkDetailConverter.staticKey,
+      BookmarkDetailConverter.new,
+    );
+  }
+
   @override
   AppRoute parseRouteFromUri(Uri uri) => switch (uri.pathSegments) {
     [] => Home(),
@@ -117,34 +158,53 @@ class _HomeViewState extends State<HomeView> with RestorationMixin {
   }
 }
 
-class BookmarkView extends StatelessWidget {
+class BookmarkView extends StatefulWidget {
   const BookmarkView({super.key});
+
+  @override
+  State<BookmarkView> createState() => _BookmarkViewState();
+}
+
+class _BookmarkViewState extends State<BookmarkView> {
+  String _text = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Bookmark')),
-      body: ListView.builder(
-        restorationId: 'bookmark_list',
-        itemCount: 100,
-        itemBuilder: (context, index) => ListTile(
-          title: Text('Bookmark $index'),
-          onTap: () =>
-              coordinator.pushOrMoveToTop(BookmarkDetail(id: index.toString())),
-        ),
+      body: Column(
+        children: [
+          TextField(onChanged: (value) => _text = value),
+          Expanded(
+            child: ListView.builder(
+              restorationId: 'bookmark_list',
+              itemCount: 100,
+              itemBuilder: (context, index) => ListTile(
+                title: Text('Bookmark $index'),
+                onTap: () => coordinator.pushOrMoveToTop(
+                  BookmarkDetail(id: index.toString(), name: _text),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class BookmarkDetailView extends StatelessWidget {
-  const BookmarkDetailView({super.key, required this.id});
+  const BookmarkDetailView({super.key, required this.id, this.name});
 
   final String id;
+  final String? name;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text('Bookmark $id')));
+    return Scaffold(
+      appBar: AppBar(title: Text('Bookmark $id')),
+      body: Center(child: Text(name ?? 'No name')),
+    );
   }
 }
 

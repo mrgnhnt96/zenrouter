@@ -15,3 +15,4 @@ export 'src/mixin/query_parameters.dart';
 export 'src/mixin/redirect.dart';
 export 'src/mixin/transition.dart';
 export 'src/mixin/unique.dart';
+export 'src/mixin/restoration.dart';

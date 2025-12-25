@@ -192,8 +192,6 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   void defineConverter() {}
 
   String resolveRouteId(covariant T route) {
-    if (route.restorationId != null) return route.restorationId!;
-
     RouteLayout? layout = route.resolveLayout(this);
     List<RouteLayout> layouts = [];
     List<StackPath> layoutPaths = [];
@@ -213,7 +211,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
         })
         .join('_');
     layoutRestorationId = '${rootRestorationId}_$layoutRestorationId';
-    final routeRestorationId = route.toUri().toString();
+    final routeRestorationId = route.restorationId ?? route.toUri().toString();
 
     return '${layoutRestorationId}_$routeRestorationId';
   }
