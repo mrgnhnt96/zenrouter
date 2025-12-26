@@ -90,8 +90,6 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
           result.add(RouteRestorable.serialize<RouteRestorable>(route));
         case RouteUnique():
           result.add(route.toUri().toString());
-        default:
-          throw StateError('Unsupported route type: $route');
       }
     }
     return result;
@@ -117,7 +115,11 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
           final type = RouteLayout.getLayoutTypeByRuntimeType(
             routeRaw['value'] as String,
           );
-          if (type == null) throw UnimplementedError();
+          if (type == null) {
+            throw UnimplementedError(
+              'The [${routeRaw['value']}] layout isn\'t defined. You must define it using RouteLayout.defineLayout',
+            );
+          }
           list.add(RouteLayout.layoutConstructorTable[type]!() as T);
         } else {
           final strategy = RestorationStrategy.values

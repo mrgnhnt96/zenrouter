@@ -1,7 +1,4 @@
-import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
-import 'package:zenrouter/src/path/restoration.dart';
-import 'package:zenrouter/zenrouter.dart';
+part of 'router.dart';
 
 /// A widget that enables state restoration for a [Coordinator] and its navigation hierarchy.
 ///
@@ -197,10 +194,10 @@ class CoordinatorRestorable extends StatefulWidget {
   final Widget child;
 
   @override
-  State<CoordinatorRestorable> createState() => CoordinatorRestorableState();
+  State<CoordinatorRestorable> createState() => _CoordinatorRestorableState();
 }
 
-class CoordinatorRestorableState extends State<CoordinatorRestorable>
+class _CoordinatorRestorableState extends State<CoordinatorRestorable>
     with RestorationMixin {
   late final _restorable = _CoordinatorRestorable(widget.coordinator);
   late final _activeRoute = ActiveRouteRestorable(
@@ -305,7 +302,7 @@ class CoordinatorRestorableState extends State<CoordinatorRestorable>
 ///
 /// ## Where It Fits in the Architecture
 ///
-/// This class is used internally by [CoordinatorRestorableState] to track the active route
+/// This class is used internally by [_CoordinatorRestorableState] to track the active route
 /// separately from the full navigation stack. While the coordinator saves the entire stack of
 /// routes for each path, this class specifically tracks which single route from which path
 /// was active when the app was paused. Upon restoration, the coordinator uses this information
@@ -322,7 +319,7 @@ class CoordinatorRestorableState extends State<CoordinatorRestorable>
 /// ## When This Gets Called
 ///
 /// **Saving (toPrimitives):**
-/// This is called whenever the coordinator's active route changes. The [CoordinatorRestorableState]
+/// This is called whenever the coordinator's active route changes. The [_CoordinatorRestorableState]
 /// listens to coordinator changes via `_saveActiveRoute()` and updates this restorable's value,
 /// which triggers serialization to the restoration bucket.
 ///
@@ -427,13 +424,12 @@ class ActiveRouteRestorable<T extends RouteUnique> extends RestorableValue<T?> {
 
   @override
   T? fromPrimitives(Object? data) {
-    if (data == null) return null;
     if (data case String data) {
       return parseRouteFromUri(Uri.parse(data)) as T;
     }
-    if (data case Map<String, dynamic> data) {
+    if (data case Map data) {
       return RouteRestorable.deserialize(
-            data,
+            data.cast(),
             parseRouteFromUri: parseRouteFromUri,
           )
           as T;
@@ -494,9 +490,6 @@ class _CoordinatorRestorable<T extends RouteUnique>
       final path = coordinator.paths.firstWhereOrNull(
         (p) => p.debugLabel == pathEntry.key,
       );
-
-      /// Invalid cached
-      if (path == null) return {};
       if (path case NavigationPath path) {
         assert(
           path.debugLabel != null,

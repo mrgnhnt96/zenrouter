@@ -1,9 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
-import 'package:zenrouter/src/coordinator/restoration.dart';
-import 'package:zenrouter/src/mixin/deeplink.dart';
-import 'package:zenrouter/src/mixin/unique.dart';
+import 'package:zenrouter/src/path/restoration.dart';
+import 'package:zenrouter/zenrouter.dart';
 
-import 'base.dart';
+part 'restoration.dart';
 
 /// Parses [RouteInformation] to and from [Uri].
 ///
@@ -47,13 +47,13 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   String get coordinatorRestorationId =>
       '_${coordinator.rootRestorationId}_coordinator_restorable';
 
-  final GlobalKey<CoordinatorRestorableState> coordinatorRestorableKey =
+  final GlobalKey<_CoordinatorRestorableState> _coordinatorRestorableKey =
       GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     return CoordinatorRestorable(
-      key: coordinatorRestorableKey,
+      key: _coordinatorRestorableKey,
       coordinator: coordinator,
       restorationId: coordinatorRestorationId,
       child: coordinator.layoutBuilder(context),
@@ -130,5 +130,3 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
     super.dispose();
   }
 }
-
-enum RoutePathState { initial, newRoute, restored }

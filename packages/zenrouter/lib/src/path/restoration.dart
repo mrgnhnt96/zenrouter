@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:zenrouter/src/coordinator/restoration.dart';
 import 'package:zenrouter/zenrouter.dart';
 
 /// A mixin that adds state restoration capabilities to navigation paths.

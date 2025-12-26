@@ -1,4 +1,3 @@
-import 'package:zenrouter/src/coordinator/restoration.dart';
 import 'package:zenrouter/zenrouter.dart';
 
 /// Defines the strategy used to serialize and deserialize a route for state restoration.
@@ -154,13 +153,13 @@ mixin RouteRestorable<T extends RouteTarget> on RouteTarget {
   ///
   /// This static method is called internally by the restoration system to convert a route
   /// into a format that can be saved to the restoration bucket. It inspects the route's
-  /// [strategy] and delegates to either URI-based or converter-based serialization.
+  /// [restorationStrategy] and delegates to either URI-based or converter-based serialization.
   static Map<String, dynamic> serialize<T extends RouteRestorable>(T route) => {
-    'strategy': route.strategy.name,
-    if (route.strategy == RestorationStrategy.converter) ...{
+    'strategy': route.restorationStrategy.name,
+    if (route.restorationStrategy == RestorationStrategy.converter) ...{
       'converter': route.converter.key,
       'value': route.converter.serialize(route),
-    } else if (route.strategy == RestorationStrategy.unique &&
+    } else if (route.restorationStrategy == RestorationStrategy.unique &&
         route is RouteUnique) ...{
       'value': (route as RouteUnique).toUri().toString(),
     },
@@ -212,9 +211,9 @@ mixin RouteRestorable<T extends RouteTarget> on RouteTarget {
   ///
   /// Defaults to [RestorationStrategy.unique], which serializes the route using its URI.
   /// Override to return [RestorationStrategy.converter] when you need custom serialization.
-  RestorationStrategy get strategy => RestorationStrategy.unique;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.unique;
 
-  /// The converter to use when [strategy] is [RestorationStrategy.converter].
+  /// The converter to use when [restorationStrategy] is [RestorationStrategy.converter].
   ///
   /// This getter must be overridden (it throws [UnimplementedError] by default) when using
   /// custom serialization. Return an instance of your [RestorableConverter] implementation.
@@ -372,7 +371,9 @@ mixin RouteRestorable<T extends RouteTarget> on RouteTarget {
 /// - [RouteRestorable] for implementing routes that use converters
 /// - [RestorationStrategy.converter] for when to use custom serialization
 abstract class RestorableConverter<T extends Object> {
+  // coverage:ignore-start
   const RestorableConverter();
+  // coverage:ignore-end
 
   /// The global registry mapping converter keys to their constructor functions.
   ///

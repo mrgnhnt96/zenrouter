@@ -101,7 +101,7 @@ class BookmarkDetail extends AppRoute with RouteRestorable<BookmarkDetail> {
   String get restorationId => 'bookmark_${id}_$name';
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.converter;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.converter;
 
   @override
   RestorableConverter<BookmarkDetail> get converter =>

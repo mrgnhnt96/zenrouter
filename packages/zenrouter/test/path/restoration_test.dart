@@ -45,7 +45,7 @@ class RestorableTestRoute extends BaseTestRoute
   String get restorationId => id;
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.converter;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.converter;
 
   @override
   RestorableConverter<RestorableTestRoute> get converter =>

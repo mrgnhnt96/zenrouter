@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zenrouter/src/coordinator/restoration.dart';
 import 'package:zenrouter/zenrouter.dart';
 
 // ============================================================================
@@ -54,6 +53,44 @@ class ProfileRoute extends AppRoute {
   List<Object?> get props => [id];
 }
 
+class UndefinedTabLayout extends AppRoute with RouteLayout<AppRoute> {
+  @override
+  StackPath<RouteUnique> resolvePath(TestCoordinator coordinator) =>
+      coordinator.undefinedTabStack;
+}
+
+class UndefinedHomeTab extends AppRoute {
+  @override
+  Type? get layout => UndefinedTabLayout;
+
+  @override
+  Uri toUri() => Uri.parse('/undefined-home-tab');
+
+  @override
+  Widget build(
+    covariant Coordinator<RouteUnique> coordinator,
+    BuildContext context,
+  ) {
+    return const Scaffold(body: Text('Undefined Home Tab'));
+  }
+}
+
+class UndefinedSearchTab extends AppRoute {
+  @override
+  Type? get layout => UndefinedTabLayout;
+
+  @override
+  Uri toUri() => Uri.parse('/undefined-search-tab');
+
+  @override
+  Widget build(
+    covariant Coordinator<RouteUnique> coordinator,
+    BuildContext context,
+  ) {
+    return const Scaffold(body: Text('Undefined Search Tab'));
+  }
+}
+
 // Route with custom restoration converter
 class BookmarkRoute extends AppRoute with RouteRestorable<BookmarkRoute> {
   BookmarkRoute({required this.id, this.customData});
@@ -65,7 +102,7 @@ class BookmarkRoute extends AppRoute with RouteRestorable<BookmarkRoute> {
   String get restorationId => 'bookmark_$id';
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.converter;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.converter;
 
   @override
   RestorableConverter<BookmarkRoute> get converter => const BookmarkConverter();
@@ -112,7 +149,7 @@ class RestorableProfileRoute extends AppRoute
   String get restorationId => 'profile_$id';
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.unique;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.unique;
 
   @override
   RestorableConverter<RestorableProfileRoute> get converter =>
@@ -174,9 +211,14 @@ class TestCoordinator extends Coordinator<AppRoute> {
     coordinator: this,
     label: 'tabs',
   );
+  late final undefinedTabStack = IndexedStackPath.createWith(
+    [UndefinedHomeTab(), UndefinedSearchTab()],
+    coordinator: this,
+    label: 'undefined_tabs',
+  );
 
   @override
-  List<StackPath> get paths => [root, tabStack];
+  List<StackPath> get paths => [root, tabStack, undefinedTabStack];
 
   @override
   void defineLayout() {
@@ -335,6 +377,26 @@ void main() {
       expect(deserialized[1], isA<BookmarkRoute>());
       expect((deserialized[1] as BookmarkRoute).customData, equals('data'));
       expect(deserialized[2], isA<SettingsRoute>());
+    });
+
+    test('throws error when deserializing undefined layout', () {
+      final serialized = [
+        {'type': 'layout', 'value': 'UndefinedTabLayout'},
+      ];
+
+      expect(
+        () => coordinator.root.deserialize(
+          serialized,
+          coordinator.parseRouteFromUriSync,
+        ),
+        throwsA(
+          isA<UnimplementedError>().having(
+            (e) => e.message,
+            'message',
+            contains('UndefinedTabLayout'),
+          ),
+        ),
+      );
     });
   });
 

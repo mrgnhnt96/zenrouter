@@ -40,7 +40,7 @@ class ComplexRoute extends TestRoute with RouteRestorable<ComplexRoute> {
   String get restorationId => 'complex_$id';
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.converter;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.converter;
 
   @override
   RestorableConverter<ComplexRoute> get converter =>
@@ -89,7 +89,7 @@ class UniqueRestorableRoute extends TestRoute
   String get restorationId => 'unique_$id';
 
   @override
-  RestorationStrategy get strategy => RestorationStrategy.unique;
+  RestorationStrategy get restorationStrategy => RestorationStrategy.unique;
 
   @override
   RestorableConverter<UniqueRestorableRoute> get converter =>
@@ -494,7 +494,7 @@ void main() {
       // Create a minimal implementation to test default
       final route = UniqueRestorableRoute('123');
 
-      expect(route.strategy, equals(RestorationStrategy.unique));
+      expect(route.restorationStrategy, equals(RestorationStrategy.unique));
     });
 
     test('converter throws UnimplementedError for unique strategy', () {
