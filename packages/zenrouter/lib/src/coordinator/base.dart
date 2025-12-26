@@ -429,17 +429,18 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// Exceptions from redirect resolution or deep link handlers propagate
   /// to the caller. Handle these in your app's error boundary.
   Future<void> recover(T route) async {
-    if (route is RouteDeepLink) {
-      switch (route.deeplinkStrategy) {
+    T target = await RouteRedirect.resolve(route, this);
+    if (target is RouteDeepLink) {
+      switch (target.deeplinkStrategy) {
         case DeeplinkStrategy.push:
-          push(route);
+          push(target);
         case DeeplinkStrategy.replace:
-          replace(route);
+          replace(target);
         case DeeplinkStrategy.custom:
-          await route.deeplinkHandler(this, route.toUri());
+          await target.deeplinkHandler(this, target.toUri());
       }
     } else {
-      replace(route);
+      replace(target);
     }
   }
 
