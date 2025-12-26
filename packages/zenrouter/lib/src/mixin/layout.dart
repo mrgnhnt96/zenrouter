@@ -1,18 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:zenrouter/zenrouter.dart';
 
-/// Builder function for creating a layout widget.
-typedef RouteLayoutBuilder<T extends RouteUnique> =
-    Widget Function(
-      Coordinator coordinator,
-      StackPath<T> path,
-      RouteLayout<T>? layout,
-    );
-
-/// Constructor function for creating a layout instance.
-typedef RouteLayoutConstructor<T extends RouteUnique> =
-    RouteLayout<T> Function();
-
 /// Mixin for routes that define a layout structure.
 ///
 /// A layout is a route that wraps other routes, such as a shell or a tab bar.
@@ -32,51 +20,79 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   static void defineLayout<T extends RouteLayout>(
     Type layout,
     T Function() constructor,
-  ) => RouteLayout.layoutConstructorTable[layout] = constructor;
+  ) {
+    RouteLayout.layoutConstructorTable[layout] = constructor;
+    final layoutInstance = constructor();
+    layoutInstance.completeOnResult(null, null, true);
+    RouteLayout._reflectionLayoutType[layoutInstance.runtimeType.toString()] =
+        layoutInstance.runtimeType;
+  }
 
   /// Table of registered layout constructors.
   static Map<Type, RouteLayoutConstructor> layoutConstructorTable = {};
+
+  static final Map<String, Type> _reflectionLayoutType = {};
+  @protected
+  static Type? getLayoutTypeByRuntimeType(String runtimeType) =>
+      _reflectionLayoutType[runtimeType];
 
   /// Table of registered layout builders.
   ///
   /// This maps layout identifiers to their widget builder functions.
   static final Map<PathKey, RouteLayoutBuilder> _layoutBuilderTable = {
-    NavigationPath.key: (coordinator, path, layout) => NavigationStack(
-      path: path as NavigationPath<RouteUnique>,
-      navigatorKey: layout == null
-          ? coordinator.routerDelegate.navigatorKey
-          : null,
-      coordinator: coordinator,
-      resolver: (route) {
-        switch (route) {
-          case RouteTransition():
-            return route.transition(coordinator);
-          default:
-            final builder = Builder(
-              builder: (context) => route.build(coordinator, context),
+    NavigationPath.key: (coordinator, path, layout) {
+      final restorationId = switch (layout) {
+        RouteUnique route => coordinator.resolveRouteId(route),
+        _ => coordinator.rootRestorationId,
+      };
+
+      return NavigationStack(
+        path: path as NavigationPath<RouteUnique>,
+        navigatorKey: layout == null
+            ? coordinator.routerDelegate.navigatorKey
+            : null,
+        coordinator: coordinator,
+        restorationId: restorationId,
+        resolver: (route) {
+          switch (route) {
+            case RouteTransition():
+              return route.transition(coordinator);
+            default:
+              final routeRestorationId = coordinator.resolveRouteId(route);
+              final builder = Builder(
+                builder: (context) => route.build(coordinator, context),
+              );
+              return switch (coordinator.transitionStrategy) {
+                DefaultTransitionStrategy.material => StackTransition.material(
+                  builder,
+                  restorationId: routeRestorationId,
+                ),
+                DefaultTransitionStrategy.cupertino =>
+                  StackTransition.cupertino(
+                    builder,
+                    restorationId: routeRestorationId,
+                  ),
+                DefaultTransitionStrategy.none => StackTransition.none(
+                  builder,
+                  restorationId: routeRestorationId,
+                ),
+              };
+          }
+        },
+      );
+    },
+    IndexedStackPath.key: (coordinator, path, layout, [restorationId]) =>
+        ListenableBuilder(
+          listenable: path,
+          builder: (context, child) {
+            final indexedStackPath = path as IndexedStackPath<RouteUnique>;
+            return IndexedStackPathBuilder(
+              path: indexedStackPath,
+              coordinator: coordinator,
+              restorationId: restorationId,
             );
-            return switch (coordinator.transitionStrategy) {
-              DefaultTransitionStrategy.material => StackTransition.material(
-                builder,
-              ),
-              DefaultTransitionStrategy.cupertino => StackTransition.cupertino(
-                builder,
-              ),
-              DefaultTransitionStrategy.none => StackTransition.none(builder),
-            };
-        }
-      },
-    ),
-    IndexedStackPath.key: (coordinator, path, layout) => ListenableBuilder(
-      listenable: path,
-      builder: (context, child) {
-        final indexedStackPath = path as IndexedStackPath<RouteUnique>;
-        return IndexedStackPathBuilder(
-          path: indexedStackPath,
-          coordinator: coordinator,
-        );
-      },
-    ),
+          },
+        ),
   };
 
   // coverage:ignore-start
@@ -113,7 +129,7 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
     if (!_layoutBuilderTable.containsKey(rootPathKey)) {
       // coverage:ignore-start
       throw UnimplementedError(
-        'No layout builder provided for [${rootPathKey.path}]. If you extend the [StackPath] class, you must register it via [RouteLayout.definePath] to use [RouteLayout.buildRoot].',
+        'No layout builder provided for [${rootPathKey.key}]. If you extend the [StackPath] class, you must register it via [RouteLayout.definePath] to use [RouteLayout.buildRoot].',
       );
       // coverage:ignore-end
     }
@@ -131,7 +147,7 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
 
     if (!_layoutBuilderTable.containsKey(path.pathKey)) {
       throw UnimplementedError(
-        'No layout builder provided for [${path.pathKey.path}]. If you extend the [StackPath] class, you must register it via [RouteLayout.definePath] to use [RouteLayout.buildPath].',
+        'No layout builder provided for [${path.pathKey.key}]. If you extend the [StackPath] class, you must register it via [RouteLayout.definePath] to use [RouteLayout.buildPath].',
       );
     }
     return _layoutBuilderTable[path.pathKey]!(coordinator, path, this);
@@ -153,7 +169,7 @@ mixin RouteLayout<T extends RouteUnique> on RouteUnique {
   // coverage:ignore-start
   /// RouteLayout does not use a URI.
   @override
-  Uri toUri() => Uri.parse('/');
+  Uri toUri() => Uri.parse('/__layout/$runtimeType');
   // coverage:ignore-end
 
   @override

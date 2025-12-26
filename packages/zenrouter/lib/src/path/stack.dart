@@ -13,7 +13,13 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
     this.observers = const [],
     this.coordinator,
     this.navigatorKey,
-  });
+    this.parseRouteFromUri,
+    this.restorationId,
+  }) : assert(
+         restorationId == null ||
+             (coordinator != null || parseRouteFromUri != null),
+         'Please provide either coordinator or parseRouteFromUri for restoration working',
+       );
 
   /// Creates a declarative navigation stack.
   ///
@@ -24,12 +30,16 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
     required StackTransitionResolver<T> resolver,
     GlobalKey<NavigatorState>? navigatorKey,
     String? debugLabel,
+    String? restorationId,
+    T Function(Uri uri)? parseRouteFromUri,
   }) {
     return DeclarativeNavigationStack(
       routes: routes,
       navigatorKey: navigatorKey,
       debugLabel: debugLabel,
       resolver: resolver,
+      restorationId: restorationId,
+      parseRouteFromUri: parseRouteFromUri,
     );
   }
 
@@ -38,6 +48,10 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
 
   /// The associated coordinator
   final Coordinator? coordinator;
+
+  final String? restorationId;
+
+  final T Function(Uri uri)? parseRouteFromUri;
 
   /// A list of observers for this navigator.
   final List<NavigatorObserver> observers;
@@ -56,11 +70,14 @@ class NavigationStack<T extends RouteTarget> extends StatefulWidget {
 }
 
 class _NavigationStackState<T extends RouteTarget>
-    extends State<NavigationStack<T>> {
+    extends State<NavigationStack<T>>
+    with RestorationMixin {
   List<Page> _pages = [];
   List<T> _previousRoutes = [];
 
   List<NavigatorObserver> _observers = [];
+
+  NavigationPathRestorable<T>? _restorable;
 
   void _updateObservers() {
     _observers = switch (widget.coordinator) {
@@ -79,6 +96,7 @@ class _NavigationStackState<T extends RouteTarget>
       widget.path.pushOrMoveToTop(widget.defaultRoute!);
     }
     widget.path.addListener(_updatePages);
+    widget.path.addListener(_updateRestorable);
     _updatePages();
     _updateObservers();
   }
@@ -86,6 +104,8 @@ class _NavigationStackState<T extends RouteTarget>
   @override
   void dispose() {
     widget.path.removeListener(_updatePages);
+    widget.path.removeListener(_updateRestorable);
+    _restorable?.dispose();
     super.dispose();
   }
 
@@ -172,6 +192,12 @@ class _NavigationStackState<T extends RouteTarget>
     setState(() {});
   }
 
+  void _updateRestorable() {
+    if (_restorable == null) return;
+    if (listEquals(_restorable!.value, widget.path.stack)) return;
+    _restorable!.value = widget.path.stack;
+  }
+
   bool coordinatorEquals(Coordinator? a, Coordinator? b) {
     if (a is CoordinatorNavigatorObserver &&
         b is CoordinatorNavigatorObserver) {
@@ -204,7 +230,33 @@ class _NavigationStackState<T extends RouteTarget>
       pages: _pages,
       observers: _observers,
       onDidRemovePage: (page) {},
+      restorationScopeId: switch (widget.restorationId) {
+        null => null,
+        final restorationId => '${restorationId}_navigator',
+      },
     );
+  }
+
+  @override
+  String? get restorationId => switch (widget.restorationId) {
+    null => null,
+    final restorationId => '${restorationId}_stack',
+  };
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    /// If the path is managed by Coordinator, it will be restored based on the Coordinator
+    if (widget.coordinator != null) return;
+
+    if (widget.parseRouteFromUri != null && _restorable == null) {
+      _restorable ??= NavigationPathRestorable(widget.parseRouteFromUri!);
+      registerForRestoration(_restorable!, '_path');
+    }
+
+    if (initialRestore && _restorable != null) {
+      if (_restorable!.value.isNotEmpty == false) return;
+      widget.path.restore(_restorable!.value);
+    }
   }
 }
 
@@ -220,6 +272,8 @@ class DeclarativeNavigationStack<T extends RouteTarget> extends StatefulWidget {
     this.navigatorKey,
     this.debugLabel,
     required this.resolver,
+    this.restorationId,
+    this.parseRouteFromUri,
   });
 
   /// The list of routes to display.
@@ -233,6 +287,11 @@ class DeclarativeNavigationStack<T extends RouteTarget> extends StatefulWidget {
 
   /// Callback to resolve routes to pages.
   final StackTransitionResolver<T> resolver;
+
+  final String? restorationId;
+
+  /// Callback to parse routes from Uri.
+  final T Function(Uri uri)? parseRouteFromUri;
 
   @override
   // ignore: library_private_types_in_public_api
@@ -276,6 +335,8 @@ class _DeclarativeNavigationStackState<T extends RouteTarget>
       path: path,
       resolver: widget.resolver,
       navigatorKey: widget.navigatorKey,
+      restorationId: widget.restorationId,
+      parseRouteFromUri: widget.parseRouteFromUri,
     );
   }
 }
@@ -287,6 +348,7 @@ class IndexedStackPathBuilder<T extends RouteUnique> extends StatefulWidget {
     super.key,
     required this.path,
     required this.coordinator,
+    this.restorationId,
   });
 
   /// The path that maintains the indexed stack state.
@@ -294,6 +356,8 @@ class IndexedStackPathBuilder<T extends RouteUnique> extends StatefulWidget {
 
   /// The coordinator used to resolve and build routes in the stack.
   final Coordinator coordinator;
+
+  final String? restorationId;
 
   @override
   State<IndexedStackPathBuilder<T>> createState() =>

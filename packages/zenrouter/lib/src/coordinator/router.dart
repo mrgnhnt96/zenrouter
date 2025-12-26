@@ -1,8 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
-import 'package:zenrouter/src/mixin/deeplink.dart';
-import 'package:zenrouter/src/mixin/unique.dart';
+import 'package:zenrouter/src/path/restoration.dart';
+import 'package:zenrouter/zenrouter.dart';
 
-import 'base.dart';
+part 'restoration.dart';
 
 /// Parses [RouteInformation] to and from [Uri].
 ///
@@ -43,8 +44,21 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   @override
   Uri? get currentConfiguration => coordinator.currentUri;
 
+  String get coordinatorRestorationId =>
+      '_${coordinator.rootRestorationId}_coordinator_restorable';
+
+  final GlobalKey<_CoordinatorRestorableState> _coordinatorRestorableKey =
+      GlobalKey();
+
   @override
-  Widget build(BuildContext context) => coordinator.layoutBuilder(context);
+  Widget build(BuildContext context) {
+    return CoordinatorRestorable(
+      key: _coordinatorRestorableKey,
+      coordinator: coordinator,
+      restorationId: coordinatorRestorationId,
+      child: coordinator.layoutBuilder(context),
+    );
+  }
 
   /// Handles the initial route path.
   ///
@@ -56,11 +70,10 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   Future<void> setInitialRoutePath(Uri configuration) async {
     if (initialRoute != null &&
         (configuration.path == '/' || configuration.path == '')) {
-      coordinator.recover(initialRoute!);
-      return;
+      setNewRoutePath(initialRoute!.toUri());
+    } else {
+      setNewRoutePath(configuration);
     }
-    final route = await coordinator.parseRouteFromUri(configuration);
-    coordinator.recover(route);
   }
 
   /// Handles browser navigation events (back/forward buttons, URL changes).
@@ -100,6 +113,10 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
       coordinator.navigate(route);
     }
   }
+
+  /// Dont need to handle restored route since it handled in [CoordinatorRestorable]
+  @override
+  Future<void> setRestoredRoutePath(Uri configuration) async {}
 
   @override
   Future<bool> popRoute() async {

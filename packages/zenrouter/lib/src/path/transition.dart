@@ -83,10 +83,11 @@ class StackTransition<T extends RouteTarget> {
   static StackTransition<T> material<T extends RouteTarget>(
     Widget child, {
     RouteGuard? guard,
+    String? restorationId,
   }) => StackTransition<T>.custom(
     builder: (context) => child,
     pageBuilder: (context, route, child) =>
-        MaterialPage(key: route, child: child),
+        MaterialPage(key: route, child: child, restorationId: restorationId),
     guard: guard,
   );
 
@@ -96,10 +97,11 @@ class StackTransition<T extends RouteTarget> {
   static StackTransition<T> cupertino<T extends RouteTarget>(
     Widget child, {
     RouteGuard? guard,
+    String? restorationId,
   }) => StackTransition<T>.custom(
     builder: (context) => child,
     pageBuilder: (context, route, child) =>
-        CupertinoPage(key: route, child: child),
+        CupertinoPage(key: route, child: child, restorationId: restorationId),
     guard: guard,
   );
 
@@ -109,10 +111,14 @@ class StackTransition<T extends RouteTarget> {
   static StackTransition<T> sheet<T extends RouteTarget>(
     Widget child, {
     RouteGuard? guard,
+    String? restorationId,
   }) => StackTransition<T>.custom(
     builder: (context) => child,
-    pageBuilder: (context, route, child) =>
-        CupertinoSheetPage(key: route, builder: (context) => child),
+    pageBuilder: (context, route, child) => CupertinoSheetPage(
+      key: route,
+      restorationId: restorationId,
+      builder: (context) => child,
+    ),
     guard: guard,
   );
 
@@ -122,10 +128,11 @@ class StackTransition<T extends RouteTarget> {
   static StackTransition<T> dialog<T extends RouteTarget>(
     Widget child, {
     RouteGuard? guard,
+    String? restorationId,
   }) => StackTransition<T>.custom(
     builder: (context) => child,
     pageBuilder: (context, route, child) =>
-        DialogPage(key: route, child: child),
+        DialogPage(key: route, restorationId: restorationId, child: child),
     guard: guard,
   );
 
@@ -141,10 +148,14 @@ class StackTransition<T extends RouteTarget> {
   static StackTransition<T> none<T extends RouteTarget>(
     Widget child, {
     RouteGuard? guard,
+    String? restorationId,
   }) => StackTransition<T>.custom(
     builder: (context) => child,
-    pageBuilder: (context, route, child) =>
-        NoTransitionPage(key: route, child: child),
+    pageBuilder: (context, route, child) => NoTransitionPage(
+      key: route,
+      child: child,
+      restorationId: restorationId,
+    ),
     guard: guard,
   );
 
@@ -158,46 +169,6 @@ class StackTransition<T extends RouteTarget> {
   final RouteGuard? guard;
 }
 
-/// Callback that maps routes to their [StackTransition].
-///
-/// Used by [NavigationStack] to determine how each route should be displayed.
-///
-/// **Example - Route-based transitions:**
-/// ```dart
-/// NavigationStack(
-///   path: coordinator.root,
-///   coordinator: coordinator,
-///   resolver: (route) {
-///     return switch (route) {
-///       // Dialogs use dialog transition
-///       ConfirmRoute() => StackTransition.dialog(route.build(coordinator, context)),
-///
-///       // Sheets use sheet transition
-///       ShareRoute() => StackTransition.sheet(route.build(coordinator, context)),
-///
-///       // iOS gets cupertino, others get material
-///       _ when Platform.isIOS => StackTransition.cupertino(
-///         route.build(coordinator, context),
-///       ),
-///       _ => StackTransition.material(route.build(coordinator, context)),
-///     };
-///   },
-/// )
-/// ```
-///
-/// **Example - RouteTransition mixin:**
-/// Routes can also define their own transition by mixing in [RouteTransition]:
-/// ```dart
-/// class SettingsRoute extends RouteTarget with RouteUnique, RouteTransition {
-///   @override
-///   StackTransition<T> transition<T extends RouteUnique>(Coordinator coordinator) {
-///     return StackTransition.cupertino(build(coordinator, context));
-///   }
-/// }
-/// ```
-typedef StackTransitionResolver<T extends RouteTarget> =
-    StackTransition<T> Function(T route);
-
 /// A page that presents its route as a Cupertino-style bottom sheet.
 ///
 /// Use this for modal overlays that slide up from the bottom of the screen,
@@ -208,7 +179,11 @@ typedef StackTransitionResolver<T extends RouteTarget> =
 ///   StackTransition.sheet(MyWidget())
 /// ```
 class CupertinoSheetPage<T extends Object> extends Page<T> {
-  const CupertinoSheetPage({super.key, required this.builder});
+  const CupertinoSheetPage({
+    super.key,
+    required this.builder,
+    super.restorationId,
+  });
 
   /// Builder for the sheet content.
   final WidgetBuilder builder;
@@ -230,7 +205,7 @@ class CupertinoSheetPage<T extends Object> extends Page<T> {
 ///   StackTransition.dialog(AlertWidget())
 /// ```
 class DialogPage<T> extends Page<T> {
-  const DialogPage({super.key, required this.child});
+  const DialogPage({super.key, required this.child, super.restorationId});
 
   /// The widget to display in the dialog.
   final Widget child;
@@ -247,7 +222,7 @@ class DialogPage<T> extends Page<T> {
 }
 
 class NoTransitionPage<T> extends Page<T> {
-  const NoTransitionPage({super.key, required this.child});
+  const NoTransitionPage({super.key, required this.child, super.restorationId});
 
   final Widget child;
 

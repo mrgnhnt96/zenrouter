@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:zenrouter/src/internal/equatable.dart';
+import 'package:zenrouter/src/internal/type.dart';
 import 'package:zenrouter/src/mixin/deeplink.dart';
 import 'package:zenrouter/src/mixin/layout.dart';
 import 'package:zenrouter/src/mixin/query_parameters.dart';
 import 'package:zenrouter/src/mixin/redirect.dart';
+import 'package:zenrouter/src/mixin/restoration.dart';
 import 'package:zenrouter/src/mixin/unique.dart';
 import 'package:zenrouter/src/path/base.dart';
 import 'router.dart';
@@ -151,6 +153,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
       path.addListener(notifyListeners);
     }
     defineLayout();
+    defineConverter();
   }
 
   // coverage:ignore-start
@@ -160,6 +163,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     for (final path in paths) {
       path.removeListener(notifyListeners);
     }
+    root.dispose();
   }
   // coverage:ignore-end
 
@@ -181,6 +185,41 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// This method is called during initialization. Override this to register
   /// custom layouts using [RouteLayout.defineLayout].
   void defineLayout() {}
+
+  /// Defines the restorable converters for this coordinator.
+  ///
+  /// Override this method to register custom restorable converters using
+  /// [RestorableConverter.defineConverter].
+  void defineConverter() {}
+
+  String resolveRouteId(covariant T route) {
+    RouteLayout? layout = route.resolveLayout(this);
+    List<RouteLayout> layouts = [];
+    List<StackPath> layoutPaths = [];
+    while (layout != null) {
+      layouts.add(layout);
+      layoutPaths.add(layout.resolvePath(this));
+      layout = layout.resolveLayout(this);
+    }
+
+    String layoutRestorationId = layoutPaths
+        .map((p) {
+          final label = p.debugLabel;
+          if (label != null) return label;
+          final index = paths.indexOf(p);
+          if (index == -1) throw UnimplementedError();
+          return index.toString();
+        })
+        .join('_');
+    layoutRestorationId = '${rootRestorationId}_$layoutRestorationId';
+    final routeRestorationId = route is RouteRestorable
+        ? (route as RouteRestorable).restorationId
+        : route.toUri().toString();
+
+    return '${layoutRestorationId}_$routeRestorationId';
+  }
+
+  String get rootRestorationId => root.debugLabel ?? 'root';
 
   /// The transition strategy for this coordinator.
   ///
@@ -309,6 +348,13 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// ```
   FutureOr<T> parseRouteFromUri(Uri uri);
 
+  /// Parses a [Uri] into a route object synchronously.
+  ///
+  /// If you have an asynchronous [parseRouteFromUri] and still want [restoration] working,
+  /// you have to provide a synchronous version of it.
+  RouteUriParserSync<T> get parseRouteFromUriSync =>
+      (uri) => parseRouteFromUri(uri) as T;
+
   /// Handles navigation from a deep link URI.
   ///
   /// If the route has [RouteDeepLink], its custom handler is called.
@@ -386,7 +432,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     if (route is RouteDeepLink) {
       switch (route.deeplinkStrategy) {
         case DeeplinkStrategy.push:
-          await push(route);
+          push(route);
         case DeeplinkStrategy.replace:
           replace(route);
         case DeeplinkStrategy.custom:
