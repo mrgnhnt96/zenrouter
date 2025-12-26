@@ -1,3 +1,73 @@
+library;
+
+/**
+ * A complete example demonstrating state restoration in ZenRouter.
+ *
+ * ## What This Example Demonstrates
+ *
+ * This example shows how to implement full state restoration for a navigation hierarchy,
+ * allowing the app to survive process death and return users to exactly where they left off.
+ * It demonstrates both simple URI-based restoration (for [Home] and [Bookmark] routes) and
+ * custom converter-based restoration (for [BookmarkDetail] with complex state).
+ *
+ * ## How to Test Restoration
+ *
+ * **On iOS Simulator:**
+ * 1. Run the app and navigate through several screens
+ * 2. Background the app (Cmd+Shift+H)
+ * 3. In Xcode: Debug → Simulate Memory Warning
+ * 4. Or use Device → Erase All Content and Settings, then restore
+ * 5. Relaunch the app - it should return to the same screen
+ *
+ * **On Android Emulator:**
+ * 1. Run the app and navigate through screens
+ * 2. Background the app (Home button)
+ * 3. Use `adb shell am kill <package>` to terminate
+ * 4. Relaunch - restoration should occur
+ *
+ * ## How the Components Work Together
+ *
+ * **MaterialApp setup:**
+ * The `restorationScopeId: 'main_restorable'` enables Flutter's restoration framework.
+ * The [CoordinatorRouterDelegate] automatically wraps your app with [CoordinatorRestorable]
+ * internally, so you don't need to do any manual wrapping. Without the restorationScopeId,
+ * no restoration will occur regardless of other setup.
+ *
+ * **Simple routes (Home, Bookmark):**
+ * These routes only implement [RouteUnique], so they're automatically saved and restored
+ * using their URI. When restored, the coordinator's `parseRouteFromUri` method converts
+ * the saved URI string back into route objects.
+ *
+ * **Complex route (BookmarkDetail):**
+ * This route mixes in [RouteRestorable] with a custom [BookmarkDetailConverter] to preserve
+ * the `name` parameter that wouldn't normally be in the URL. The converter serializes both
+ * the id and name, allowing the route to be perfectly reconstructed with all its state.
+ *
+ * **Coordinator registration (AppCoordinator.defineConverter - line 75-79):**
+ * The converter must be registered globally during coordinator initialization. This makes
+ * it available to the restoration system when deserializing saved state.
+ *
+ * **Widget state (HomeView with RestorableInt):**
+ * The counter in HomeView demonstrates that widget-level state (the count) is separate
+ * from navigation state. Each screen needing to persist its own state must implement
+ * [RestorationMixin] independently.
+ *
+ * ## What Gets Restored
+ *
+ * ✅ **Navigation stack:** All routes in the navigation history
+ * ✅ **Active route:** Which screen was visible when the app was backgrounded
+ * ✅ **Route parameters:** Both URL parameters and custom converter data
+ * ✅ **Widget state:** Any widgets using [RestorationMixin] (like the counter)
+ *
+ * ❌ **Not restored automatically:**
+ * - Network requests or API data (refetch on restore)
+ * - Form inputs without [RestorationMixin]
+ * - Scroll positions without restoration IDs
+ * - In-memory caches or temporary data
+ *
+ * See the restoration documentation in [CoordinatorRestorable], [RouteRestorable],
+ * and [RestorableConverter] for detailed implementation guidance.
+ */
 import 'package:flutter/material.dart';
 import 'package:zenrouter/zenrouter.dart';
 

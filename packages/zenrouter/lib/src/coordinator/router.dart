@@ -47,13 +47,13 @@ class CoordinatorRouterDelegate extends RouterDelegate<Uri>
   String get coordinatorRestorationId =>
       '_${coordinator.rootRestorationId}_coordinator_restorable';
 
-  final GlobalKey<CoordinatorRestorableState> _coordinatorRestorableKey =
+  final GlobalKey<CoordinatorRestorableState> coordinatorRestorableKey =
       GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     return CoordinatorRestorable(
-      key: _coordinatorRestorableKey,
+      key: coordinatorRestorableKey,
       coordinator: coordinator,
       restorationId: coordinatorRestorationId,
       child: coordinator.layoutBuilder(context),

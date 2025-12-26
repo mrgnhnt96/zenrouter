@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:zenrouter/src/coordinator/restoration.dart';
 import 'package:zenrouter/src/internal/equatable.dart';
 import 'package:zenrouter/src/internal/type.dart';
 import 'package:zenrouter/src/mixin/deeplink.dart';
@@ -213,7 +212,9 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
         })
         .join('_');
     layoutRestorationId = '${rootRestorationId}_$layoutRestorationId';
-    final routeRestorationId = route.restorationId ?? route.toUri().toString();
+    final routeRestorationId = route is RouteRestorable
+        ? (route as RouteRestorable).restorationId
+        : route.toUri().toString();
 
     return '${layoutRestorationId}_$routeRestorationId';
   }
@@ -352,7 +353,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// If you have an asynchronous [parseRouteFromUri] and still want [restoration] working,
   /// you have to provide a synchronous version of it.
   RouteUriParserSync<T> get parseRouteFromUriSync =>
-      parseRouteFromUri as RouteUriParserSync<T>;
+      (uri) => parseRouteFromUri(uri) as T;
 
   /// Handles navigation from a deep link URI.
   ///
