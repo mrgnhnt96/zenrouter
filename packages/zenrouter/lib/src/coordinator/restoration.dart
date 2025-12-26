@@ -209,9 +209,6 @@ class _CoordinatorRestorable<T extends RouteUnique>
       if (path case RestorablePath path) {
         result[path.debugLabel!] = path.serialize();
       }
-      final converter = RestorableConverter.buildConverter(path.pathKey.key);
-      if (converter == null) throw UnimplementedError();
-      result[path.debugLabel!] = converter.serialize(path);
     }
 
     return result;

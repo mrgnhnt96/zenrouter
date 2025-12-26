@@ -16,9 +16,9 @@ mixin RouteRestorable<T extends RouteTarget> on RouteTarget {
     },
   };
 
-  static T deserialize<T>(
+  static T deserialize<T extends RouteTarget>(
     Map<String, dynamic> data, {
-    required T Function(Uri uri)? parseRouteFromUri,
+    required RouteUriParserSync<T>? parseRouteFromUri,
   }) {
     final rawStrategy = data['strategy'];
     if (rawStrategy == null && rawStrategy is! String) {

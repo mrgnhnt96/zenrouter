@@ -87,7 +87,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
         case RouteLayout():
           result.add({'type': 'layout', 'value': route.runtimeType.toString()});
         case RouteRestorable():
-          result.add(RouteRestorable.serialize(route));
+          result.add(RouteRestorable.serialize<RouteRestorable>(route));
         case RouteUnique():
           result.add(route.toUri().toString());
         default:
