@@ -1,4 +1,4 @@
-## 0.5.0
+## 0.4.8
 - **Feat**: Introduce new state restoration with `RouteRestoration` mixin. Support state restoration by default if `restorationScopeId` is provided in `MaterialApp.router` and using `Coordinator` pattern.
 - **Fix**: Resolve bug in `recover` method where `RouteRedirec` was ignored.
 
