@@ -933,6 +933,29 @@ class CoordinatorGenerator implements Builder {
     );
     buffer.writeln('}');
 
+    /// Extension for pushing [routeBase] routes.
+    buffer.writeln('/// Extension on [$routeBaseName] for navigation methods.');
+    buffer.writeln(
+      'extension ${coordinatorName}NavContext on $routeBaseName {',
+    );
+    // Navigate
+    buffer.writeln(
+      '  Future<void> navigate(BuildContext context) => context.$contextGetterName.navigate(this);',
+    );
+    // Push
+    buffer.writeln(
+      '  Future<T?> push<T extends Object>(BuildContext context) => context.$contextGetterName.push<T>(this);',
+    );
+    // Replace
+    buffer.writeln(
+      '  Future<void> replace(BuildContext context) => context.$contextGetterName.replace(this);',
+    );
+    // Recover
+    buffer.writeln(
+      '  Future<void> recover(BuildContext context) => context.$contextGetterName.recover(this);',
+    );
+    buffer.writeln('}');
+
     return buffer.toString();
   }
 

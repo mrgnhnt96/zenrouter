@@ -1,3 +1,13 @@
+## 0.4.11
+
+### New Features
+
+- **NavContext extension**: Auto-generated extension on route base class (e.g., `AppRoute`) providing convenient navigation methods directly from route instances:
+  - `route.navigate(context)` - Navigate to the route
+  - `route.push<T>(context)` - Push the route and optionally return a result
+  - `route.replace(context)` - Replace the current route
+  - `route.recover(context)` - Recover to the route
+
 ## 0.4.10
 
 ### New Features
