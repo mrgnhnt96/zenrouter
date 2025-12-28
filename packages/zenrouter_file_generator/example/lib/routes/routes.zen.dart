@@ -1,7 +1,9 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 
+import 'package:flutter/widgets.dart';
 import 'package:zenrouter/zenrouter.dart';
+import '_route.dart';
 
 import '(auth).forgot-password.dart' deferred as _auth_forgotpassword;
 import '(auth)/_layout.dart';
@@ -44,9 +46,7 @@ export 'tabs/feed/following/_layout.dart';
 export 'tabs/feed/for-you/_layout.dart';
 export 'tabs/profile.dart';
 export 'tabs/settings.dart';
-
-/// Base class for all routes in this application.
-abstract class AppRoute extends RouteTarget with RouteUnique {}
+export '_route.dart';
 
 /// Generated coordinator managing all routes.
 class AppCoordinator extends Coordinator<AppRoute> {
@@ -181,6 +181,14 @@ class AppCoordinator extends Coordinator<AppRoute> {
       }(),
       _ => NotFoundRoute(uri: uri, queries: uri.queryParameters),
     };
+  }
+
+  @override
+  Widget layoutBuilder(BuildContext context) {
+    return AppCoordinatorProvider(
+      coordinator: this,
+      child: super.layoutBuilder(context),
+    );
   }
 }
 
@@ -476,4 +484,30 @@ extension AppCoordinatorNav on AppCoordinator {
   Future<T?> pushTabSettings<T extends Object>() => push(TabSettingsRoute());
   Future<void> replaceTabSettings() => replace(TabSettingsRoute());
   Future<void> recoverTabSettings() => recover(TabSettingsRoute());
+}
+
+/// InheritedWidget provider for accessing the coordinator from the widget tree.
+class AppCoordinatorProvider extends InheritedWidget {
+  const AppCoordinatorProvider({
+    required this.coordinator,
+    required super.child,
+    super.key,
+  });
+
+  /// Retrieves the [AppCoordinator] from the widget tree.
+  static AppCoordinator of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<AppCoordinatorProvider>()!
+      .coordinator;
+
+  final AppCoordinator coordinator;
+
+  @override
+  bool updateShouldNotify(AppCoordinatorProvider oldWidget) =>
+      coordinator != oldWidget.coordinator;
+}
+
+/// Extension on [BuildContext] for convenient coordinator access.
+extension AppCoordinatorGetter on BuildContext {
+  /// Access the [AppCoordinator] from the widget tree.
+  AppCoordinator get appCoordinator => AppCoordinatorProvider.of(this);
 }
