@@ -8,6 +8,10 @@ class LayoutCodeConfig {
   /// The coordinator class name (e.g., 'AppCoordinator').
   final String coordinatorName;
 
+  /// Creates a new layout code generation configuration.
+  ///
+  /// The [routeBase] and [coordinatorName] default to `'AppRoute'` and
+  /// `'AppCoordinator'` respectively if not specified.
   const LayoutCodeConfig({
     this.routeBase = 'AppRoute',
     this.coordinatorName = 'AppCoordinator',
