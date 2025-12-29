@@ -511,3 +511,15 @@ extension AppCoordinatorGetter on BuildContext {
   /// Access the [AppCoordinator] from the widget tree.
   AppCoordinator get appCoordinator => AppCoordinatorProvider.of(this);
 }
+
+/// Extension on [AppRoute] for navigation methods.
+extension AppCoordinatorNavContext on AppRoute {
+  Future<void> navigate(BuildContext context) =>
+      context.appCoordinator.navigate(this);
+  Future<T?> push<T extends Object>(BuildContext context) =>
+      context.appCoordinator.push<T>(this);
+  Future<void> replace(BuildContext context) =>
+      context.appCoordinator.replace(this);
+  Future<void> recover(BuildContext context) =>
+      context.appCoordinator.recover(this);
+}
