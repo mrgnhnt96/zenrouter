@@ -7,9 +7,15 @@ export 'src/coordinator/router.dart';
 
 /// Path base
 export 'src/path/base.dart';
+export 'src/path/navigation.dart';
 export 'src/path/restoration.dart';
+export 'src/path/indexed.dart';
+export 'src/path/stack.dart';
+export 'src/path/transition.dart';
 
 /// Route target capabilities
+export 'src/mixin/target.dart';
+export 'src/mixin/guard.dart';
 export 'src/mixin/deeplink.dart';
 export 'src/mixin/layout.dart';
 export 'src/mixin/query_parameters.dart';

@@ -2,15 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:zenrouter/src/internal/equatable.dart';
-import 'package:zenrouter/src/internal/type.dart';
-import 'package:zenrouter/src/mixin/deeplink.dart';
-import 'package:zenrouter/src/mixin/layout.dart';
-import 'package:zenrouter/src/mixin/query_parameters.dart';
-import 'package:zenrouter/src/mixin/redirect.dart';
-import 'package:zenrouter/src/mixin/restoration.dart';
-import 'package:zenrouter/src/mixin/unique.dart';
-import 'package:zenrouter/src/path/base.dart';
-import 'router.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// Strategy for resolving parent layouts during navigation.
 enum _ResolveLayoutStrategy {
@@ -477,9 +469,9 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     var routeIndex = routePath.stack.indexOf(route);
 
     void discardRouteIfNeeded(T existingRoute) {
+      // Maximum reuse existing route
       if (existingRoute.hashCode != route.hashCode) {
-        route.onDidPop(null, this);
-        route.completeOnResult(null, this, true);
+        route.onDiscard();
       }
     }
 

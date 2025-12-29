@@ -1,6 +1,4 @@
-import 'package:zenrouter/src/coordinator/base.dart';
-import 'package:zenrouter/src/mixin/unique.dart';
-import 'package:zenrouter/src/path/base.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// Mixin for routes that define a custom transition.
 mixin RouteTransition on RouteUnique {

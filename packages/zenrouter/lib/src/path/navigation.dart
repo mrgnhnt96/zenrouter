@@ -1,4 +1,6 @@
-part of 'base.dart';
+// ignore_for_file: invalid_use_of_protected_member
+
+import 'package:zenrouter/zenrouter.dart';
 
 /// A mutable stack path for standard navigation.
 ///
@@ -54,7 +56,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
   void reset() => clear();
 
   @override
-  T? get activeRoute => _stack.lastOrNull;
+  T? get activeRoute => stack.lastOrNull;
 
   @override
   Future<void> activateRoute(T route) async {
@@ -63,16 +65,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
   }
 
   @override
-  void restore(dynamic data) {
-    final rawStack = (data as List).cast<RouteTarget>();
-
-    _stack.clear();
-    for (final route in rawStack) {
-      route.isPopByPath = false;
-      route._path = this;
-      _stack.add(route as T);
-    }
-  }
+  void restore(dynamic data) => bindStack(data.cast<RouteTarget>().cast<T>());
 
   @override
   List<dynamic> serialize() => [
@@ -84,7 +77,7 @@ class NavigationPath<T extends RouteTarget> extends StackPath<T>
     List<dynamic> data, [
     RouteUriParserSync<RouteUnique>? parseRouteFromUri,
   ]) {
-    parseRouteFromUri ??= _coordinator?.parseRouteFromUriSync;
+    parseRouteFromUri ??= coordinator?.parseRouteFromUriSync;
     return <T>[
       for (final routeRaw in data)
         RouteTarget.deserialize(routeRaw, parseRouteFromUri: parseRouteFromUri!)

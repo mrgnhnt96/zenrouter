@@ -1,4 +1,6 @@
-part of '../path/base.dart';
+import 'dart:async';
+
+import 'package:zenrouter/zenrouter.dart';
 
 /// Mixin for routes that need to guard against being popped.
 ///
@@ -78,10 +80,10 @@ mixin RouteGuard on RouteTarget {
   /// }
   /// ```
   FutureOr<bool> popGuardWith(covariant Coordinator coordinator) {
-    assert(_path?.coordinator == coordinator, '''
-[RouteGuard] The path [${_path.toString()}] is associated with a different coordinator (or null) than the one currently handling the navigation.
+    assert(stackPath?.coordinator == coordinator, '''
+[RouteGuard] The path [${stackPath.toString()}] is associated with a different coordinator (or null) than the one currently handling the navigation.
 Expected coordinator: $coordinator
-Path's coordinator: ${_path?.coordinator}
+Path's coordinator: ${stackPath?.coordinator}
 Ensure that the path is created with the correct coordinator using `.createWith()` and that routes are being managed by the correct coordinator.
 ''');
     return popGuard();

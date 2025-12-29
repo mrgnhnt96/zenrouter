@@ -1,4 +1,8 @@
-part of '../path/base.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:zenrouter/src/internal/equatable.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// The base class for all navigation targets (routes).
 ///
@@ -99,11 +103,12 @@ abstract class RouteTarget extends Equatable {
 
   /// Completer that resolves when this route is popped.
   ///
-  /// The future completes with the result passed to [pop] or [completeOnResult].
+  /// The future completes with the result passed to [completeOnResult].
   /// This is set fresh each time the route is pushed.
-  Completer<Object?> _onResult = Completer();
+  final Completer<Object?> _onResult = Completer();
 
   @visibleForTesting
+  @protected
   /// The completer for the result of the route. For testing purposes only.
   /// DO NOT USE THIS MANUALLY. USE [completeOnResult] instead.
   Completer<Object?> get onResult => _onResult;
@@ -114,11 +119,33 @@ abstract class RouteTarget extends Equatable {
   /// Used internally to ensure routes are managed by the correct path.
   StackPath? _path;
 
+  /// The [StackPath] that currently contains this route.
+  StackPath? get stackPath => _path;
+
+  /// Binds the route to a path.
+  ///
+  /// This is called internally when the route is pushed onto a path.
+  /// Useful when you want to create your custom [StackPath].
+  @protected
+  void bindStackPath(StackPath path) => _path = path;
+
+  /// Clears the path binding.
+  ///
+  /// This is called internally when the route is removed from a path.
+  @protected
+  void clearStackPath() => _path = null;
+
   /// The result value to be returned when this route is popped.
   ///
   /// This is set by [StackPath.pop] before [onDidPop] is called, allowing
   /// the widget tree to access the result during disposal.
   Object? _resultValue;
+
+  @protected
+  void bindResultValue(Object? value) => _resultValue = value;
+
+  /// The result value to be returned when this route is popped.
+  Object? get resultValue => _resultValue;
 
   /// Whether this route was popped by the path mechanism.
   ///
@@ -155,12 +182,16 @@ abstract class RouteTarget extends Equatable {
 
   @mustCallSuper
   void onDidPop(Object? result, covariant Coordinator? coordinator) {
+    onDiscard();
+
     /// Handle force pop from navigator
     if (isPopByPath == false && _path?.stack.contains(this) == true) {
       if (_path case StackMutatable path) {
         path.remove(this);
       }
     }
+
+    clearStackPath();
   }
 
   /// Completes the route's result future.
@@ -171,13 +202,17 @@ abstract class RouteTarget extends Equatable {
     covariant Coordinator? coordinator, [
     bool failSilent = false,
   ]) {
-    if (failSilent && _onResult.isCompleted) {
-      _resultValue = null;
-      _path = null;
-      return;
-    }
+    if (failSilent && _onResult.isCompleted) return;
     _onResult.complete(result);
     _resultValue = result;
-    _path = null;
+  }
+
+  /// Call when the route is discarded.
+  ///
+  /// That is difference with [onDidPop], [onDidPop] called when route is removed from stack.
+  /// [onDiscard] called when route isn't in any path yet but it is in the process of being removed.
+  @mustCallSuper
+  void onDiscard() {
+    completeOnResult(null, null, true);
   }
 }

@@ -1,4 +1,6 @@
-part of 'base.dart';
+// ignore_for_file: invalid_use_of_protected_member
+
+import 'package:zenrouter/zenrouter.dart';
 
 /// A fixed stack path for indexed navigation (like tabs).
 ///
@@ -12,7 +14,7 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
     for (final path in stack) {
       /// Set the output of every route to null since this cannot pop
       path.completeOnResult(null, null);
-      path._path = this;
+      path.bindStackPath(this);
     }
   }
 

@@ -1,4 +1,6 @@
-part of 'base.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// Defines how a route should be displayed as a widget and wrapped in a page.
 ///
