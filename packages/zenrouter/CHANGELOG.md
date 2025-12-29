@@ -1,3 +1,6 @@
+## 0.4.11
+- **Feat**: Expose `stackPath` in `RouteTarget` and expose `protected` method for developer create custom `stackPath`.
+
 ## 0.4.10
 - **Chore**: Fix analyzer warnings
 
