@@ -35,7 +35,6 @@ class TestRoute extends RouteTarget with RouteUnique {
   final String id;
 
   bool resultCompleted = false;
-  Object? resultValue;
 
   @override
   void completeOnResult(
@@ -44,7 +43,6 @@ class TestRoute extends RouteTarget with RouteUnique {
     bool failSilent = false,
   ]) {
     resultCompleted = true;
-    resultValue = result;
     super.completeOnResult(result, coordinator, failSilent);
   }
 
@@ -60,14 +58,18 @@ class TestRoute extends RouteTarget with RouteUnique {
   }
 }
 
-/// Test route that redirects to another route
-class RedirectRoute extends RouteTarget
-    with RouteUnique, RouteRedirect<TestRoute> {
-  RedirectRoute({required this.redirectToId});
+class TestQueryRoute extends RouteTarget
+    with RouteUnique, RouteQueryParameters {
+  TestQueryRoute(this.id, {Map<String, String>? queryParameters}) {
+    queryNotifier.value = queryParameters ?? {};
+  }
 
-  final String redirectToId;
+  @override
+  final ValueNotifier<Map<String, String>> queryNotifier = ValueNotifier({});
+
+  final String id;
+
   bool resultCompleted = false;
-  Object? resultValue;
 
   @override
   void completeOnResult(
@@ -76,7 +78,36 @@ class RedirectRoute extends RouteTarget
     bool failSilent = false,
   ]) {
     resultCompleted = true;
-    resultValue = result;
+    super.completeOnResult(result, coordinator, failSilent);
+  }
+
+  @override
+  List<Object?> get props => [id];
+
+  @override
+  Uri toUri() => Uri.parse('/$id').replace(queryParameters: queries);
+
+  @override
+  Widget build(Coordinator coordinator, BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+/// Test route that redirects to another route
+class RedirectRoute extends RouteTarget
+    with RouteUnique, RouteRedirect<TestRoute> {
+  RedirectRoute({required this.redirectToId});
+
+  final String redirectToId;
+  bool resultCompleted = false;
+
+  @override
+  void completeOnResult(
+    Object? result,
+    Coordinator<RouteUnique>? coordinator, [
+    bool failSilent = false,
+  ]) {
+    resultCompleted = true;
     super.completeOnResult(result, coordinator, failSilent);
   }
 
@@ -327,10 +358,37 @@ void main() {
       path.pushOrMoveToTop(newRouteA);
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // The original should be replaced by the new route
-      expect(identical(routeA.onResult, newRouteA.onResult), isTrue);
+      // The orginal route should remain but the new route should be completed
+      expect(routeA.resultCompleted, isFalse);
+      expect(newRouteA.resultCompleted, isTrue);
       expect(path.stack.length, 1);
     });
+
+    test(
+      'pushing RouteQueryParameters will update the existing route',
+      () async {
+        final path = NavigationPath<TestQueryRoute>.create(label: 'test');
+
+        final routeA = TestQueryRoute('a');
+        path.push(routeA);
+
+        // Push same route again via pushOrMoveToTop
+        final newRouteA = TestQueryRoute('a', queryParameters: {'a': 'b'});
+        path.pushOrMoveToTop(newRouteA);
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(routeA.resultCompleted, isFalse);
+        expect(path.stack.length, 1);
+        expect(routeA.queryNotifier.value, {'a': 'b'});
+        // Check the newRouteA queryNotifier is disposed
+        expect(newRouteA.resultCompleted, isTrue);
+        expect(newRouteA.stackPath, isNull);
+        expect(
+          () => newRouteA.queryNotifier.addListener(() {}),
+          throwsFlutterError,
+        );
+      },
+    );
   });
 
   group('RouteRedirect.resolve - Route Completion', () {

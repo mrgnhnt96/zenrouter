@@ -1,18 +1,10 @@
+// ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:zenrouter/src/internal/diff.dart';
-import 'package:zenrouter/src/internal/equatable.dart';
 import 'package:zenrouter/zenrouter.dart';
-
-part 'transition.dart';
-part 'stack.dart';
-part 'navigation.dart';
-part 'indexed.dart';
-part '../mixin/target.dart';
-part '../mixin/guard.dart';
 
 /// A type-safe identifier for [StackPath] types.
 ///
@@ -54,10 +46,10 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
   Future<R?> push<R extends Object>(T element) async {
     T target = await RouteRedirect.resolve(element, coordinator);
     target.isPopByPath = false;
-    target._path = this;
+    target.bindStackPath(this);
     _stack.add(target);
     notifyListeners();
-    return target._onResult.future as Future<R?>;
+    return target.onResult.future as Future<R?>;
   }
 
   /// Pushes a route to the top of the stack, or moves it if already present.
@@ -70,10 +62,15 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
   Future<void> pushOrMoveToTop(T element) async {
     T target = await RouteRedirect.resolve(element, coordinator);
     target.isPopByPath = false;
-    target._path = this;
+    target.bindStackPath(this);
     final index = _stack.indexOf(target);
     if (_stack.isNotEmpty && index == _stack.length - 1) {
-      element._onResult = _stack.last._onResult;
+      final last = _stack.last;
+      if (last is RouteQueryParameters && element is RouteQueryParameters) {
+        last.queries = element.queries;
+      }
+      element.onDiscard();
+      element.clearStackPath();
       return;
     }
 
@@ -112,7 +109,7 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
 
     final element = _stack.removeLast();
     element.isPopByPath = true;
-    element._resultValue = result;
+    element.bindResultValue(result);
     notifyListeners();
     return true;
   }
@@ -132,7 +129,7 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
   /// - User-initiated back navigation (use [pop] instead)
   /// - You need to respect guards
   void remove(T element) {
-    element._path = null;
+    element.clearStackPath();
     final removed = _stack.remove(element);
     if (removed) notifyListeners();
   }
@@ -211,13 +208,13 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   static NavigationPath<T> navigationStack<T extends RouteTarget>([
     String? debugLabel,
     List<T>? stack,
-  ]) => NavigationPath<T>._(debugLabel, stack);
+  ]) => NavigationPath<T>.create(label: debugLabel, stack: stack);
 
   /// Creates an [IndexedStackPath] with a fixed list of routes.
   static IndexedStackPath<T> indexedStack<T extends RouteTarget>(
     List<T> stack, [
-    String? debugLabel,
-  ]) => IndexedStackPath<T>._(stack, debugLabel: debugLabel);
+    String? label,
+  ]) => IndexedStackPath<T>.create(stack, label: label);
   // coverage:ignore-end
 
   /// A label for debugging purposes.
@@ -225,6 +222,16 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
 
   /// The internal mutable stack.
   final List<T> _stack;
+
+  @protected
+  void bindStack(List<T> stack) {
+    clear();
+    for (final route in stack) {
+      route.isPopByPath = false;
+      route.bindStackPath(this);
+      _stack.add(route);
+    }
+  }
 
   /// The coordinator this path is bound to.
   ///
@@ -263,6 +270,7 @@ abstract class StackPath<T extends RouteTarget> with ChangeNotifier {
   void clear() {
     for (final route in _stack) {
       route.completeOnResult(null, null, true);
+      route.clearStackPath();
     }
     _stack.clear();
   }

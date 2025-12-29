@@ -1,4 +1,4 @@
-import 'package:zenrouter/src/path/base.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// Represents a diff operation between two lists.
 sealed class DiffOp<T> {

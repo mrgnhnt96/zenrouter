@@ -2,15 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:zenrouter/src/internal/equatable.dart';
-import 'package:zenrouter/src/internal/type.dart';
-import 'package:zenrouter/src/mixin/deeplink.dart';
-import 'package:zenrouter/src/mixin/layout.dart';
-import 'package:zenrouter/src/mixin/query_parameters.dart';
-import 'package:zenrouter/src/mixin/redirect.dart';
-import 'package:zenrouter/src/mixin/restoration.dart';
-import 'package:zenrouter/src/mixin/unique.dart';
-import 'package:zenrouter/src/path/base.dart';
-import 'router.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// Strategy for resolving parent layouts during navigation.
 enum _ResolveLayoutStrategy {

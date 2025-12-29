@@ -1,4 +1,7 @@
-part of 'base.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:zenrouter/src/internal/diff.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// A widget that renders a stack of pages based on a [NavigationPath].
 ///
@@ -111,7 +114,8 @@ class _NavigationStackState<T extends RouteTarget>
 
   Page _buildPage(T route) {
     /// Set path to route
-    route._path = widget.path;
+    // ignore: invalid_use_of_protected_member
+    route.bindStackPath(widget.path);
     final destination = widget.resolver(route);
     return destination.pageBuilder(
       context,
@@ -123,10 +127,11 @@ class _NavigationStackState<T extends RouteTarget>
           _ => true,
         },
         onPopInvokedWithResult: (didPop, result) async {
-          route._path ??= widget.path;
+          // ignore: invalid_use_of_protected_member
+          if (route.stackPath == null) route.bindStackPath(widget.path);
           if (!(kIsWeb || kIsWasm)) {
             assert(
-              identical(route._path, widget.path),
+              identical(route.stackPath, widget.path),
               'Route must be from the same path',
             );
           }
@@ -136,8 +141,9 @@ class _NavigationStackState<T extends RouteTarget>
               route.completeOnResult(result, widget.coordinator);
               route.onDidPop(result, widget.coordinator);
             case true:
+              result = route.resultValue;
               route.completeOnResult(
-                route._resultValue,
+                result,
                 widget.coordinator,
 
                 /// Fail silently if it's a force pop from the platform.

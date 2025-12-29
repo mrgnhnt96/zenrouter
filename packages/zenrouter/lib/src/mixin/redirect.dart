@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:zenrouter/src/coordinator/base.dart';
-import 'package:zenrouter/src/path/base.dart';
+import 'package:zenrouter/zenrouter.dart';
 
 /// A mixin that provides redirection logic for routes.
 ///

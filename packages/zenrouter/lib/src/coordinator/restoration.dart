@@ -258,10 +258,12 @@ class _CoordinatorRestorableState extends State<CoordinatorRestorable>
   void didUpdateWidget(covariant CoordinatorRestorable oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.coordinator != oldWidget.coordinator) {
+      // coverage:ignore-start
       oldWidget.coordinator.removeListener(_saveCoordinator);
       widget.coordinator.addListener(_saveCoordinator);
       oldWidget.coordinator.removeListener(_saveActiveRoute);
       widget.coordinator.addListener(_saveActiveRoute);
+      // coverage:ignore-end
     }
   }
 
