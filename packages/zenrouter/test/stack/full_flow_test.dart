@@ -1215,6 +1215,7 @@ void main() {
       // Verify we are back at home and shell is gone
       expect(find.byKey(const ValueKey('home')), findsOneWidget);
       expect(find.byKey(const ValueKey('shell')), findsNothing);
+      expect(coordinator.root.stack.length, 1);
 
       // Pop
       coordinator.navigate(ProfileRoute(userId: '123'));

@@ -35,7 +35,8 @@ extension type const PathKey(String key) {}
 /// - [push]: Add a route to the top
 /// - [pushOrMoveToTop]: Add or promote existing route
 /// - [pop]: Remove the top route (with guard support)
-mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
+mixin StackMutatable<T extends RouteTarget> on StackPath<T>
+    implements StackNavigatable<T> {
   /// Pushes a new route onto the stack.
   ///
   /// This handles redirects and sets up the route's path reference.
@@ -133,6 +134,47 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T> {
     final removed = _stack.remove(element);
     if (removed) notifyListeners();
   }
+
+  @override
+  Future<void> navigate(T route) async {
+    final routeIndex = stack.indexOf(route);
+
+    if (routeIndex != -1) {
+      // Pop until we reach the target route
+      while (stack.length > routeIndex + 1) {
+        final allowPop = await pop();
+        if (allowPop == null || !allowPop) {
+          // Guard blocked navigation or stack is empty - restore the URL
+          notifyListeners();
+          return;
+        }
+      }
+
+      final existingRoute = stack[routeIndex];
+      if (existingRoute is RouteQueryParameters &&
+          route is RouteQueryParameters) {
+        existingRoute.queries = route.queries;
+        notifyListeners();
+      }
+
+      /// Deep comparison if routes are not the same, complete the route
+      if (existingRoute.hashCode != route.hashCode) {
+        route.onDiscard();
+      }
+    } else {
+      await push(route);
+    }
+  }
+}
+
+/// Mixin for stack paths that support navigation.
+///
+/// Apply this mixin to [StackPath] subclasses that need navigation support.
+mixin StackNavigatable<T extends RouteTarget> on StackPath<T> {
+  /// Navigate to a specific route in the stack.
+  ///
+  /// This is useful for handling back/forward button on the browser.
+  Future<void> navigate(T route);
 }
 
 /// A stack-based container for managing navigation history.

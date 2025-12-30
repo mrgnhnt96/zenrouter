@@ -7,7 +7,7 @@ import 'package:zenrouter/zenrouter.dart';
 /// Routes are pre-defined and cannot be added or removed. Navigation switches
 /// the active index.
 class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
-    with RestorablePath<T, int, int> {
+    with StackNavigatable<T>, RestorablePath<T, int, int> {
   IndexedStackPath._(super.stack, {super.debugLabel, super.coordinator})
     : assert(stack.isNotEmpty, 'Read-only path must have at least one route'),
       super() {
@@ -146,4 +146,26 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
 
   @override
   int deserialize(int data) => data;
+
+  @override
+  Future<void> navigate(T route) async {
+    final routeIndex = stack.indexOf(route);
+    if (routeIndex == -1) {
+      // Route not found in IndexedStackPath - restore the URL to current state
+      notifyListeners();
+      return;
+    }
+
+    final existingRoute = stack[routeIndex];
+    if (existingRoute is RouteQueryParameters &&
+        route is RouteQueryParameters) {
+      existingRoute.queries = route.queries;
+      notifyListeners();
+    }
+
+    if (existingRoute.hashCode != route.hashCode) {
+      route.onDiscard();
+    }
+    await activateRoute(existingRoute);
+  }
 }

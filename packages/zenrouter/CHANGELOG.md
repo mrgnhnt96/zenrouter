@@ -1,5 +1,10 @@
+## 0.4.12
+- **Feat**: Introduce new `StackNavigatable` mixin for `StackPath` to handle custom logic when receive `navigate` command. (Back/Forward button on the browser)
+- **Fix**: `navigate` clear all history due when pushing custom layout.
+
 ## 0.4.11
 - **Feat**: Expose `stackPath` in `RouteTarget` and expose `protected` method for developer create custom `stackPath`.
+- **Feat**: Add `onDiscard` to handle discarding phase in `RouteTarget`.
 
 ## 0.4.10
 - **Chore**: Fix analyzer warnings

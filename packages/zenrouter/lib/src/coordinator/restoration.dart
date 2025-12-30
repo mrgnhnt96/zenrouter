@@ -426,7 +426,10 @@ class ActiveRouteRestorable<T extends RouteUnique> extends RestorableValue<T?> {
 
   @override
   T? fromPrimitives(Object? data) {
+    // Never happen
+    // coverage:ignore-start
     if (data == null) return null;
+    // coverage:ignore-end
     return RouteTarget.deserialize(data, parseRouteFromUri: parseRouteFromUri);
   }
 

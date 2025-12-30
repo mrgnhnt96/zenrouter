@@ -389,7 +389,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
 
           /// If layoutIndex exists and not on the top
           if (layoutIndex == -1) {
-            layoutOfLayoutPath.activateRoute(layout);
+            layoutOfLayoutPath.push(layout);
           } else {
             /// Pop until layoutIndex is on the top
             final popCount = layoutOfLayoutPath.stack.length - layoutIndex - 1;
@@ -466,76 +466,18 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   Future<void> navigate(T route) async {
     final layout = route.resolveLayout(this);
     final routePath = layout?.resolvePath(this) ?? root;
-    var routeIndex = routePath.stack.indexOf(route);
-
-    void discardRouteIfNeeded(T existingRoute) {
-      // Maximum reuse existing route
-      if (existingRoute.hashCode != route.hashCode) {
-        route.onDiscard();
-      }
+    final popSuccess = await _resolveLayouts(
+      layout,
+      strategy: _ResolveLayoutStrategy.popUntil,
+    );
+    if (!popSuccess) {
+      // Layout resolution failed - restore the URL to current state
+      notifyListeners();
+      return;
     }
 
-    switch (routePath) {
-      case StackMutatable():
-        if (routeIndex != -1) {
-          final popSuccess = await _resolveLayouts(
-            layout,
-            strategy: _ResolveLayoutStrategy.popUntil,
-          );
-          if (!popSuccess) {
-            // Layout resolution failed - restore the URL to current state
-            notifyListeners();
-            return;
-          }
-
-          // Pop until we reach the target route
-          while (routePath.stack.length > routeIndex + 1) {
-            final allowPop = await routePath.pop();
-            if (allowPop == null || !allowPop) {
-              // Guard blocked navigation or stack is empty - restore the URL
-              notifyListeners();
-              return;
-            }
-          }
-
-          final existingRoute = routePath.stack[routeIndex];
-          if (existingRoute is RouteQueryParameters &&
-              route is RouteQueryParameters) {
-            existingRoute.queries = route.queries;
-            notifyListeners();
-          }
-
-          /// Deep comparison if routes are not the same, complete the route
-          discardRouteIfNeeded(existingRoute as T);
-        } else {
-          push(route);
-        }
-      case IndexedStackPath():
-        final popSuccess = await _resolveLayouts(
-          layout,
-          strategy: _ResolveLayoutStrategy.popUntil,
-        );
-        if (!popSuccess) {
-          // Layout resolution failed - restore the URL to current state
-          notifyListeners();
-          return;
-        }
-
-        if (routeIndex == -1) {
-          // Route not found in IndexedStackPath - restore the URL to current state
-          notifyListeners();
-          return;
-        }
-
-        final existingRoute = routePath.stack[routeIndex];
-        if (existingRoute is RouteQueryParameters &&
-            route is RouteQueryParameters) {
-          existingRoute.queries = route.queries;
-          notifyListeners();
-        }
-
-        discardRouteIfNeeded(existingRoute as T);
-        routePath.activateRoute(existingRoute);
+    if (routePath case StackNavigatable routePath) {
+      await routePath.navigate(route);
     }
   }
 
