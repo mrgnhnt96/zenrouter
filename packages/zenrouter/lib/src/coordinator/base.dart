@@ -464,7 +464,9 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
   /// If layout resolution fails or a guard blocks the navigation, [notifyListeners]
   /// is called to sync the browser URL back to the current application state.
   Future<void> navigate(T route) async {
-    final layout = route.resolveLayout(this);
+    final target = await RouteRedirect.resolve(route, this);
+
+    final layout = target.resolveLayout(this);
     final routePath = layout?.resolvePath(this) ?? root;
     final popSuccess = await _resolveLayouts(
       layout,
@@ -477,7 +479,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
     }
 
     if (routePath case StackNavigatable routePath) {
-      await routePath.navigate(route);
+      await routePath.navigate(target);
     } else {
       assert(() {
         debugPrint(

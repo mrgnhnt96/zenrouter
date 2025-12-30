@@ -1,3 +1,6 @@
+## 0.4.13
+- **Fix**: Ensure `navigate` method is compatible with `RouteRedirect`.
+
 ## 0.4.12
 - **Feat**: Introduce new `StackNavigatable` mixin for `StackPath` to handle custom logic when receiving a `navigate` command. (Back/Forward button on the browser)
 - **Fix**: `navigate` clear all history that occurred when pushing a custom layout.
