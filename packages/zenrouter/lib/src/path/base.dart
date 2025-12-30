@@ -156,7 +156,7 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T>
         notifyListeners();
       }
 
-      /// Deep comparison if routes are not the same, complete the route
+      /// If routes differ by hash code, discard the incoming route
       if (existingRoute.hashCode != route.hashCode) {
         route.onDiscard();
       }

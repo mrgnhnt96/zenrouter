@@ -387,7 +387,7 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
             when layoutOfLayoutPath is StackMutatable:
           final layoutIndex = layoutOfLayoutPath.stack.indexOf(layout);
 
-          /// If layoutIndex exists and not on the top
+          /// If layoutIndex does not exist (not in stack)
           if (layoutIndex == -1) {
             layoutOfLayoutPath.pushOrMoveToTop(layout);
           } else {
@@ -478,6 +478,15 @@ abstract class Coordinator<T extends RouteUnique> extends Equatable
 
     if (routePath case StackNavigatable routePath) {
       await routePath.navigate(route);
+    } else {
+      assert(() {
+        debugPrint(
+          'ZenRouter: routePath (${routePath.runtimeType}) does not implement '
+          'StackNavigatable. The navigate() call for route $route will have no '
+          'effect on the navigation stack or browser history.',
+        );
+        return true;
+      }());
     }
   }
 

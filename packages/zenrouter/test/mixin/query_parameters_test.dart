@@ -269,6 +269,10 @@ void main() {
       );
       // Completed the previous route
       expect(newRoute.onResult.isCompleted, true);
+      expect(
+        () => newRoute.queryNotifier.addListener(() {}),
+        throwsA(isA<FlutterError>()),
+      );
     });
 
     test('disposes notifier on didPop', () {

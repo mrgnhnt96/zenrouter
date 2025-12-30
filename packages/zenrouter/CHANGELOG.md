@@ -1,6 +1,6 @@
 ## 0.4.12
-- **Feat**: Introduce new `StackNavigatable` mixin for `StackPath` to handle custom logic when receive `navigate` command. (Back/Forward button on the browser)
-- **Fix**: `navigate` clear all history due when pushing custom layout.
+- **Feat**: Introduce new `StackNavigatable` mixin for `StackPath` to handle custom logic when receiving a `navigate` command. (Back/Forward button on the browser)
+- **Fix**: `navigate` clear all history that occurred when pushing a custom layout.
 
 ## 0.4.11
 - **Feat**: Expose `stackPath` in `RouteTarget` and expose `protected` method for developer create custom `stackPath`.

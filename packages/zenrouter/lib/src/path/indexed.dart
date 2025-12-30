@@ -116,6 +116,9 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
     final index = stack.indexOf(route);
     final currentRoute = stack[_activeIndex];
 
+    if (currentRoute.hashCode != route.hashCode) {
+      route.onDiscard();
+    }
     if (index == _activeIndex) {
       /// If the route is a [RouteQueryParameters], update the queries
       if (currentRoute is RouteQueryParameters &&
@@ -123,10 +126,6 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
         currentRoute.queries = route.queries;
       }
       return;
-    }
-
-    if (currentRoute.hashCode != route.hashCode) {
-      route.onDiscard();
     }
 
     if (index == -1) throw StateError('Route not found');
@@ -159,6 +158,6 @@ class IndexedStackPath<T extends RouteTarget> extends StackPath<T>
       notifyListeners();
       return;
     }
-    await activateRoute(stack[routeIndex]);
+    await activateRoute(route);
   }
 }
