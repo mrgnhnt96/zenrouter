@@ -77,9 +77,8 @@ mixin StackMutatable<T extends RouteTarget> on StackPath<T>
 
     if (index != -1) {
       final removed = _stack.removeAt(index);
-
-      /// Complete the result future to prevent the route from being popped.
-      removed.completeOnResult(null, null, true);
+      removed.onDiscard();
+      removed.clearStackPath();
     }
     _stack.add(target);
     notifyListeners();
